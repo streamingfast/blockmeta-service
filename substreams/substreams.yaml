@@ -25,7 +25,7 @@ modules:
     kind: map
     initialBlock: 0
     inputs:
-      - source: sf.ethereum.type.v2.Clocks
+      - source: sf.substreams.v1.Clock
     output:
       type: proto:sf.substreams.sink.kv.v1.KVOperations
 

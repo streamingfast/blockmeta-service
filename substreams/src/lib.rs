@@ -3,8 +3,7 @@ use std::time::SystemTime;
 use substreams::pb::substreams::Clock;
 use substreams_sink_kv::pb::sf::substreams::sink::kv::v1::KvOperations;
 
-mod pb;
-
+mod pb;xw
 const KEY_BLOCK_BY_ID_NUMBER_PREFIX: &str = "bi";
 const KEY_BLOCK_BY_NUMBER_ID_PREFIX: &str = "bn";
 const KEY_BLOCK_BY_TIMESTAMP_ID_PREFIX: &str = "bt";
