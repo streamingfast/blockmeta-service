@@ -3,12 +3,13 @@ package:
   name: blockmeta_service
   version: v0.1.0
 
-imports:
-
 binaries:
   default:
     type: wasm/rust-v1
     file: ./target/wasm32-unknown-unknown/release/substreams.wasm
+
+imports:
+  sink_kv: https://github.com/streamingfast/substreams-sink-kv/releases/download/v0.1.2/substreams-sink-kv-v0.1.2.spkg
 
 modules:
   - name: map_clocks
@@ -19,5 +20,9 @@ modules:
     output:
       type: proto:sf.substreams.sink.kv.v1.KVOperations
 
+sink:
+  module: map_clocks
+  type: sf.substreams.sink.kv.v1.GenericService
+  config:
 
 network: mainnet
