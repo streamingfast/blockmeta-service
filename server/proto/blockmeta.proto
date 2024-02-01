@@ -2,6 +2,8 @@ syntax = "proto3";
 package sf.blockmeta.v2;
 import "google/protobuf/timestamp.proto";
 
+option go_package = "./blockmeta";
+
 service Block {
   rpc NumToID (NumToIDReq) returns (BlockResp);
   rpc IDToNum(IDToNumReq) returns (BlockResp);
