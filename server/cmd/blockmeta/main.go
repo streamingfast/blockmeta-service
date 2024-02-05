@@ -126,10 +126,6 @@ func (s *serverBlock) Before(ctx context.Context, in *pb.RelativeTimeReq) (*pb.B
 		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
 	}
 
-	if len(response.KeyValues) > 4 {
-		return nil, fmt.Errorf("more than four blocks found for block timestamp: %v", in.Time)
-	}
-
 	var blockID string
 	var blockNum uint64
 	blockPbTimestamp := &timestamppb.Timestamp{}
@@ -158,10 +154,6 @@ func (s *serverBlock) After(ctx context.Context, in *pb.RelativeTimeReq) (*pb.Bl
 	response, err := pbkvClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})
 	if err != nil {
 		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
-	}
-
-	if len(response.KeyValues) > 4 {
-		return nil, fmt.Errorf("more than four blocks found for block timestamp: %v", in.Time)
 	}
 
 	var blockID string
