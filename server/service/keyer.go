@@ -126,28 +126,3 @@ func packU64(num uint64) string {
 	binary.BigEndian.PutUint64(numBytes, num)
 	return hex.EncodeToString(numBytes)
 }
-
-
-
-100
-	get "key.1" -> not found
-	set "key.1" = "bar"
-	get "key.2" -> "123"
-	set "key.2" = "789"
-	get "key.3" -> "xyz"
-	del "key.3"
-	set xu:FFFFFF100: [
-		del "key.1"
-		set "key.2"	= "123"
-		set "key.3" = "xyz"
-	]
-
-101
-	get "key.1" -> "bar"           -->  xu:FFFFFF101: set "key.1" = "bar"
-	set "key.1" = "baz"
-
-undo last valid block 99
-	get xu:FFFFFF101: set "key.1" = "bar"
-	set "key.1" = "bar"
-	get xu:FFFFFF100: set "key.1" = ""
-	set "key.1" = ""
