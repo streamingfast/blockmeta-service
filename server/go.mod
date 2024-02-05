@@ -1,4 +1,4 @@
-module blockmeta_server
+module github.com/streamingfast/blockmeta-service
 
 go 1.21.6
 

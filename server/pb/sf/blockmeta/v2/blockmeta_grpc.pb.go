@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: proto/blockmeta.proto
+// source: sf/blockmeta/v2/blockmeta.proto
 
-package blockmeta
+package pbbmsrv
 
 import (
 	context "context"
@@ -63,16 +63,15 @@ func (c *blockClient) Head(ctx context.Context, in *Empty, opts ...grpc.CallOpti
 }
 
 // BlockServer is the server API for Block service.
-// All implementations must embed UnimplementedBlockServer
+// All implementations should embed UnimplementedBlockServer
 // for forward compatibility
 type BlockServer interface {
 	NumToID(context.Context, *NumToIDReq) (*BlockResp, error)
 	IDToNum(context.Context, *IDToNumReq) (*BlockResp, error)
 	Head(context.Context, *Empty) (*BlockResp, error)
-	mustEmbedUnimplementedBlockServer()
 }
 
-// UnimplementedBlockServer must be embedded to have forward compatible implementations.
+// UnimplementedBlockServer should be embedded to have forward compatible implementations.
 type UnimplementedBlockServer struct {
 }
 
@@ -85,7 +84,6 @@ func (UnimplementedBlockServer) IDToNum(context.Context, *IDToNumReq) (*BlockRes
 func (UnimplementedBlockServer) Head(context.Context, *Empty) (*BlockResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Head not implemented")
 }
-func (UnimplementedBlockServer) mustEmbedUnimplementedBlockServer() {}
 
 // UnsafeBlockServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to BlockServer will
@@ -173,7 +171,7 @@ var Block_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/blockmeta.proto",
+	Metadata: "sf/blockmeta/v2/blockmeta.proto",
 }
 
 // BlockByTimeClient is the client API for BlockByTime service.
@@ -221,16 +219,15 @@ func (c *blockByTimeClient) Before(ctx context.Context, in *RelativeTimeReq, opt
 }
 
 // BlockByTimeServer is the server API for BlockByTime service.
-// All implementations must embed UnimplementedBlockByTimeServer
+// All implementations should embed UnimplementedBlockByTimeServer
 // for forward compatibility
 type BlockByTimeServer interface {
 	At(context.Context, *TimeReq) (*BlockResp, error)
 	After(context.Context, *RelativeTimeReq) (*BlockResp, error)
 	Before(context.Context, *RelativeTimeReq) (*BlockResp, error)
-	mustEmbedUnimplementedBlockByTimeServer()
 }
 
-// UnimplementedBlockByTimeServer must be embedded to have forward compatible implementations.
+// UnimplementedBlockByTimeServer should be embedded to have forward compatible implementations.
 type UnimplementedBlockByTimeServer struct {
 }
 
@@ -243,7 +240,6 @@ func (UnimplementedBlockByTimeServer) After(context.Context, *RelativeTimeReq) (
 func (UnimplementedBlockByTimeServer) Before(context.Context, *RelativeTimeReq) (*BlockResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Before not implemented")
 }
-func (UnimplementedBlockByTimeServer) mustEmbedUnimplementedBlockByTimeServer() {}
 
 // UnsafeBlockByTimeServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to BlockByTimeServer will
@@ -331,5 +327,5 @@ var BlockByTime_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/blockmeta.proto",
+	Metadata: "sf/blockmeta/v2/blockmeta.proto",
 }

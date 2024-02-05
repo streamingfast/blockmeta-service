@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: proto/read.proto
+// source: sf/substreams/sink/kv/v1/read.proto
 
-package pb
+package pbkv
 
 import (
 	context "context"
@@ -77,7 +77,7 @@ func (c *kvClient) Scan(ctx context.Context, in *ScanRequest, opts ...grpc.CallO
 }
 
 // KvServer is the server API for Kv service.
-// All implementations must embed UnimplementedKvServer
+// All implementations should embed UnimplementedKvServer
 // for forward compatibility
 type KvServer interface {
 	// Get returns the requested value as bytes if it exists, grpc_error: NOT_FOUND otherwise.
@@ -88,10 +88,9 @@ type KvServer interface {
 	GetByPrefix(context.Context, *GetByPrefixRequest) (*GetByPrefixResponse, error)
 	// Scan returns then next _limit_ key/value pairs starting lexicographically at the given key, grpc_error: NOT_FOUND otherwise.
 	Scan(context.Context, *ScanRequest) (*ScanResponse, error)
-	mustEmbedUnimplementedKvServer()
 }
 
-// UnimplementedKvServer must be embedded to have forward compatible implementations.
+// UnimplementedKvServer should be embedded to have forward compatible implementations.
 type UnimplementedKvServer struct {
 }
 
@@ -107,7 +106,6 @@ func (UnimplementedKvServer) GetByPrefix(context.Context, *GetByPrefixRequest) (
 func (UnimplementedKvServer) Scan(context.Context, *ScanRequest) (*ScanResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Scan not implemented")
 }
-func (UnimplementedKvServer) mustEmbedUnimplementedKvServer() {}
 
 // UnsafeKvServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to KvServer will
@@ -217,5 +215,5 @@ var Kv_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/read.proto",
+	Metadata: "sf/substreams/sink/kv/v1/read.proto",
 }

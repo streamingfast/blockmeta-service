@@ -1,14 +1,14 @@
-package kvtool
+package service
 
 import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"math"
-	"math/big"
 	"strings"
 	"time"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -18,35 +18,29 @@ const (
 	TblPrefixTimelineBck = "4"
 )
 
-func PackNumPrefixKey(blockNum uint64) string {
-	keyPrefix := TblPrefixBlockNums + ":" + packU64Reverse(blockNum) + ":"
+var Keyer keyer
+
+type keyer struct{}
+
+func (keyer) PackNumPrefixKey(blockNum uint64) string {
+	keyPrefix := TblPrefixBlockNums + ":" + packU64Reverse(blockNum)
 	return keyPrefix
 }
 
-func PackIDPrefixKey(id string) string {
-	keyPrefix := TblPrefixBlockIDs + ":" + id + ":"
+func (keyer) PackIDPrefixKey(id string) string {
+	keyPrefix := TblPrefixBlockIDs + ":" + id
 	return keyPrefix
 }
 
-func PackTimePrefixKey(time time.Time, fwd bool) string {
+func (keyer) PackTimePrefixKey(time time.Time, fwd bool) string {
 	timeAsUnixMillis := uint64(time.UnixMilli())
 	if fwd {
-		return TblPrefixTimelineFwd + ":" + packU64(timeAsUnixMillis) + ":"
+		return TblPrefixTimelineFwd + ":" + packU64(timeAsUnixMillis)
 	}
-	return TblPrefixTimelineBck + ":" + packU64Reverse(timeAsUnixMillis) + ":"
+	return TblPrefixTimelineBck + ":" + packU64Reverse(timeAsUnixMillis)
 }
 
-func packU64Reverse(num uint64) string {
-	return packU64(math.MaxUint64 - num)
-}
-
-func packU64(num uint64) string {
-	numBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(numBytes, num)
-	return hex.EncodeToString(numBytes)
-}
-
-func UnpackNumIDKey(key string) (blockNum uint64, blockID string, err error) {
+func (keyer) UnpackNumIDKey(key string) (blockNum uint64, blockID string, err error) {
 	parts := strings.Split(key, ":")
 
 	parts = parts[1:] // remove the prefix
@@ -69,7 +63,7 @@ func UnpackNumIDKey(key string) (blockNum uint64, blockID string, err error) {
 	return blockNum, blockID, nil
 }
 
-func UnpackIDNumKey(key string) (blockNum uint64, blockID string, err error) {
+func (keyer) UnpackIDNumKey(key string) (blockNum uint64, blockID string, err error) {
 	parts := strings.Split(key, ":")
 
 	parts = parts[1:] // remove the prefix
@@ -92,7 +86,7 @@ func UnpackIDNumKey(key string) (blockNum uint64, blockID string, err error) {
 	return blockNum, blockID, nil
 }
 
-func UnpackTimeIDKey(key string, fwd bool) (pbTimestamp *timestamppb.Timestamp, blockID string, err error) {
+func (keyer) UnpackTimeIDKey(key string, fwd bool) (pbTimestamp *timestamppb.Timestamp, blockID string, err error) {
 	parts := strings.Split(key, ":")
 
 	parts = parts[1:] // remove the prefix
@@ -123,13 +117,37 @@ func UnpackTimeIDKey(key string, fwd bool) (pbTimestamp *timestamppb.Timestamp, 
 	return pbTimestamp, blockID, nil
 }
 
-func UnpackTimeValue(timestampAsBytes []byte) (pbTimestamp *timestamppb.Timestamp) {
-	timestampAsUnix := time.UnixMilli(big.NewInt(0).SetBytes(timestampAsBytes).Int64())
-	pbTimestamp = timestamppb.New(timestampAsUnix)
-	return pbTimestamp
+func packU64Reverse(num uint64) string {
+	return packU64(math.MaxUint64 - num)
 }
 
-func UnpackBlockNumberValue(blockNumberAsBytes []byte) (blockNumber uint64) {
-	blockNumber = big.NewInt(0).SetBytes(blockNumberAsBytes).Uint64()
-	return blockNumber
+func packU64(num uint64) string {
+	numBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(numBytes, num)
+	return hex.EncodeToString(numBytes)
 }
+
+
+
+100
+	get "key.1" -> not found
+	set "key.1" = "bar"
+	get "key.2" -> "123"
+	set "key.2" = "789"
+	get "key.3" -> "xyz"
+	del "key.3"
+	set xu:FFFFFF100: [
+		del "key.1"
+		set "key.2"	= "123"
+		set "key.3" = "xyz"
+	]
+
+101
+	get "key.1" -> "bar"           -->  xu:FFFFFF101: set "key.1" = "bar"
+	set "key.1" = "baz"
+
+undo last valid block 99
+	get xu:FFFFFF101: set "key.1" = "bar"
+	set "key.1" = "bar"
+	get xu:FFFFFF100: set "key.1" = ""
+	set "key.1" = ""

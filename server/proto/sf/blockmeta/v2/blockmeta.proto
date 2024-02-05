@@ -2,7 +2,7 @@ syntax = "proto3";
 package sf.blockmeta.v2;
 import "google/protobuf/timestamp.proto";
 
-option go_package = "./blockmeta";
+option go_package = "github.com/streamingfast/blockmeta-service;pbbmsrv";
 
 service Block {
   rpc NumToID (NumToIDReq) returns (BlockResp);
