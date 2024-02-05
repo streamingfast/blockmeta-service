@@ -134,23 +134,17 @@ func (s *serverBlock) Before(ctx context.Context, in *pb.RelativeTimeReq) (*pb.B
 	var blockNum uint64
 	blockPbTimestamp := &timestamppb.Timestamp{}
 
-	fmt.Printf("keyValues length %d\n", len(response.KeyValues))
 	for i := 0; i < len(response.KeyValues); i++ {
-		fmt.Println("key: ", response.KeyValues[i].Key)
 		blockPbTimestamp, blockID, err = kvtool.UnpackTimeIDKey(response.KeyValues[i].Key, false)
 		if err != nil {
 			return nil, fmt.Errorf("error unpacking block number and block ID: %w", err)
 		}
-		fmt.Println("blockPbTimestamp: ", blockPbTimestamp)
 
 		if !in.Inclusive && (blockPbTimestamp.AsTime() == in.Time.AsTime()) {
-			fmt.Println("1")
 			continue
 		}
 
 		blockNum = kvtool.UnpackBlockNumberValue(response.KeyValues[i].Value)
-
-		fmt.Println("blockNum: ", blockNum)
 		break
 	}
 	return &pb.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}, nil
@@ -174,23 +168,19 @@ func (s *serverBlock) After(ctx context.Context, in *pb.RelativeTimeReq) (*pb.Bl
 	var blockNum uint64
 	blockPbTimestamp := &timestamppb.Timestamp{}
 
-	fmt.Printf("keyValues length %d\n", len(response.KeyValues))
 	for i := 0; i < len(response.KeyValues); i++ {
-		fmt.Println("key: ", response.KeyValues[i].Key)
+
 		blockPbTimestamp, blockID, err = kvtool.UnpackTimeIDKey(response.KeyValues[i].Key, true)
 		if err != nil {
 			return nil, fmt.Errorf("error unpacking block number and block ID: %w", err)
 		}
-		fmt.Println("blockPbTimestamp: ", blockPbTimestamp)
 
 		if !in.Inclusive && (blockPbTimestamp.AsTime() == in.Time.AsTime()) {
-			fmt.Println("1")
 			continue
 		}
 
 		blockNum = kvtool.UnpackBlockNumberValue(response.KeyValues[i].Value)
 
-		fmt.Println("blockNum: ", blockNum)
 		break
 	}
 	return &pb.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}, nil
