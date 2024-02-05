@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type BlockClient interface {
 	NumToID(ctx context.Context, in *NumToIDReq, opts ...grpc.CallOption) (*BlockResp, error)
 	IDToNum(ctx context.Context, in *IDToNumReq, opts ...grpc.CallOption) (*BlockResp, error)
+	Head(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*BlockResp, error)
 }
 
 type blockClient struct {
@@ -52,12 +53,22 @@ func (c *blockClient) IDToNum(ctx context.Context, in *IDToNumReq, opts ...grpc.
 	return out, nil
 }
 
+func (c *blockClient) Head(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*BlockResp, error) {
+	out := new(BlockResp)
+	err := c.cc.Invoke(ctx, "/sf.blockmeta.v2.Block/Head", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BlockServer is the server API for Block service.
 // All implementations must embed UnimplementedBlockServer
 // for forward compatibility
 type BlockServer interface {
 	NumToID(context.Context, *NumToIDReq) (*BlockResp, error)
 	IDToNum(context.Context, *IDToNumReq) (*BlockResp, error)
+	Head(context.Context, *Empty) (*BlockResp, error)
 	mustEmbedUnimplementedBlockServer()
 }
 
@@ -70,6 +81,9 @@ func (UnimplementedBlockServer) NumToID(context.Context, *NumToIDReq) (*BlockRes
 }
 func (UnimplementedBlockServer) IDToNum(context.Context, *IDToNumReq) (*BlockResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IDToNum not implemented")
+}
+func (UnimplementedBlockServer) Head(context.Context, *Empty) (*BlockResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Head not implemented")
 }
 func (UnimplementedBlockServer) mustEmbedUnimplementedBlockServer() {}
 
@@ -120,6 +134,24 @@ func _Block_IDToNum_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Block_Head_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BlockServer).Head(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sf.blockmeta.v2.Block/Head",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BlockServer).Head(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Block_ServiceDesc is the grpc.ServiceDesc for Block service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +166,10 @@ var Block_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "IDToNum",
 			Handler:    _Block_IDToNum_Handler,
+		},
+		{
+			MethodName: "Head",
+			Handler:    _Block_Head_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

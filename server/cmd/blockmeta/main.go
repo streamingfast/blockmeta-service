@@ -74,35 +74,31 @@ func (s *serverBlock) IDToNum(ctx context.Context, in *pb.IDToNumReq) (*pb.Block
 	return &pb.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}, nil
 }
 
-func (s *serverBlock) At(ctx context.Context, in *pb.TimeReq) (*pb.BlockResp, error) {
-	prefix := kvtool.PackTimePrefixKey(in.Time.AsTime(), true)
-
+func (s *serverBlock) Head(ctx context.Context, in *pb.Empty) (*pb.BlockResp, error) {
+	prefix := kvtool.TblPrefixTimelineBck + ":"
 	pbkvClient := connectToSinkServer()
 
-	response, err := pbkvClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix})
+	response, err := pbkvClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix, Limit: 1})
 	if err != nil {
 		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
 	}
 
-	if len(response.KeyValues) > 1 {
-		return nil, fmt.Errorf("more than one block found for block timestamp: %v", in.Time)
-	}
-
-	blockPbTimestamp, blockID, err := kvtool.UnpackTimeIDKey(response.KeyValues[0].Key, true)
+	blockPbTimestamp, blockID, err := kvtool.UnpackTimeIDKey(response.KeyValues[0].Key, false)
 	if err != nil {
 		return nil, fmt.Errorf("error unpacking block number and block ID: %w", err)
 	}
 
 	blockNum := kvtool.UnpackBlockNumberValue(response.KeyValues[0].Value)
+
 	return &pb.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}, nil
 }
 
-func (s *serverBlock) Before(ctx context.Context, in *pb.RelativeTimeReq) (*pb.BlockResp, error) {
+func (s *serverBlock) At(ctx context.Context, in *pb.TimeReq) (*pb.BlockResp, error) {
 	prefix := kvtool.PackTimePrefixKey(in.Time.AsTime(), false)
 
 	pbkvClient := connectToSinkServer()
 
-	response, err := pbkvClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 1})
+	response, err := pbkvClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix})
 	if err != nil {
 		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
 	}
@@ -120,26 +116,83 @@ func (s *serverBlock) Before(ctx context.Context, in *pb.RelativeTimeReq) (*pb.B
 	return &pb.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}, nil
 }
 
+func (s *serverBlock) Before(ctx context.Context, in *pb.RelativeTimeReq) (*pb.BlockResp, error) {
+	prefix := kvtool.PackTimePrefixKey(in.Time.AsTime(), false)
+
+	pbkvClient := connectToSinkServer()
+
+	response, err := pbkvClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})
+	if err != nil {
+		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
+	}
+
+	if len(response.KeyValues) > 4 {
+		return nil, fmt.Errorf("more than four blocks found for block timestamp: %v", in.Time)
+	}
+
+	var blockID string
+	var blockNum uint64
+	blockPbTimestamp := &timestamppb.Timestamp{}
+
+	fmt.Printf("keyValues length %d\n", len(response.KeyValues))
+	for i := 0; i < len(response.KeyValues); i++ {
+		fmt.Println("key: ", response.KeyValues[i].Key)
+		blockPbTimestamp, blockID, err = kvtool.UnpackTimeIDKey(response.KeyValues[i].Key, false)
+		if err != nil {
+			return nil, fmt.Errorf("error unpacking block number and block ID: %w", err)
+		}
+		fmt.Println("blockPbTimestamp: ", blockPbTimestamp)
+
+		if !in.Inclusive && (blockPbTimestamp.AsTime() == in.Time.AsTime()) {
+			fmt.Println("1")
+			continue
+		}
+
+		blockNum = kvtool.UnpackBlockNumberValue(response.KeyValues[i].Value)
+
+		fmt.Println("blockNum: ", blockNum)
+		break
+	}
+	return &pb.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}, nil
+}
+
 func (s *serverBlock) After(ctx context.Context, in *pb.RelativeTimeReq) (*pb.BlockResp, error) {
 	prefix := kvtool.PackTimePrefixKey(in.Time.AsTime(), true)
 
 	pbkvClient := connectToSinkServer()
 
-	response, err := pbkvClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 1})
+	response, err := pbkvClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})
 	if err != nil {
 		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
 	}
 
-	if len(response.KeyValues) > 1 {
-		return nil, fmt.Errorf("more than one block found for block timestamp: %v", in.Time)
+	if len(response.KeyValues) > 4 {
+		return nil, fmt.Errorf("more than four blocks found for block timestamp: %v", in.Time)
 	}
 
-	blockPbTimestamp, blockID, err := kvtool.UnpackTimeIDKey(response.KeyValues[0].Key, true)
-	if err != nil {
-		return nil, fmt.Errorf("error unpacking block number and block ID: %w", err)
-	}
+	var blockID string
+	var blockNum uint64
+	blockPbTimestamp := &timestamppb.Timestamp{}
 
-	blockNum := kvtool.UnpackBlockNumberValue(response.KeyValues[0].Value)
+	fmt.Printf("keyValues length %d\n", len(response.KeyValues))
+	for i := 0; i < len(response.KeyValues); i++ {
+		fmt.Println("key: ", response.KeyValues[i].Key)
+		blockPbTimestamp, blockID, err = kvtool.UnpackTimeIDKey(response.KeyValues[i].Key, true)
+		if err != nil {
+			return nil, fmt.Errorf("error unpacking block number and block ID: %w", err)
+		}
+		fmt.Println("blockPbTimestamp: ", blockPbTimestamp)
+
+		if !in.Inclusive && (blockPbTimestamp.AsTime() == in.Time.AsTime()) {
+			fmt.Println("1")
+			continue
+		}
+
+		blockNum = kvtool.UnpackBlockNumberValue(response.KeyValues[i].Value)
+
+		fmt.Println("blockNum: ", blockNum)
+		break
+	}
 	return &pb.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}, nil
 }
 
@@ -195,20 +248,22 @@ func testClient() {
 	}
 
 	d := pb.NewBlockByTimeClient(conn)
-	blockThirdResp, err := d.At(ctx, &pb.TimeReq{Time: timestamppb.New(time.UnixMilli(1438270239000))})
+	blockThirdResp, err := d.At(ctx, &pb.TimeReq{Time: timestamppb.New(time.UnixMilli(1438270241000))})
 	if err != nil {
 		log.Fatalf("could not get block data for At request: %v", err)
 	}
 
-	blockFourthResp, err := d.After(ctx, &pb.RelativeTimeReq{Time: timestamppb.New(time.UnixMilli(1438270239090)), Inclusive: true})
+	blockFourthResp, err := d.After(ctx, &pb.RelativeTimeReq{Time: timestamppb.New(time.UnixMilli(1438270241000)), Inclusive: true})
 	if err != nil {
 		log.Fatalf("could not get block data for After request: %v", err)
 	}
 
-	blockFifthResp, err := d.Before(ctx, &pb.RelativeTimeReq{Time: timestamppb.New(time.UnixMilli(1438270239090)), Inclusive: true})
+	blockFifthResp, err := d.Before(ctx, &pb.RelativeTimeReq{Time: timestamppb.New(time.UnixMilli(1438270241000)), Inclusive: false})
 	if err != nil {
 		log.Fatalf("could not get block data for Before request: %v", err)
 	}
+
+	blockSithResp, err := c.Head(ctx, &pb.Empty{})
 
 	fmt.Printf("Blockresponse for NumToID request: %s\n", blockResp.String())
 
@@ -219,4 +274,7 @@ func testClient() {
 	fmt.Printf("Blockresponse for After request: %s\n", blockFourthResp.String())
 
 	fmt.Printf("Blockresponse for Before request: %s\n", blockFifthResp.String())
+
+	fmt.Printf("Blockresponse for Head request: %s\n", blockSithResp.String())
+
 }
