@@ -18,6 +18,3 @@ WORKDIR /app
 
 COPY --from=build /app/blockmeta /app/blockmeta
 
-EXPOSE 9000
-
-ENTRYPOINT [ "/app/blockmeta" ]
