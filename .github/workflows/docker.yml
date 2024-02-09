@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-    REGISTRY: gcr.io/eoscanada-shared-services
+  REGISTRY: gcr.io/eoscanada-shared-services
 
 jobs:
   build:
@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ 1.21.x ]
+        go-version: [ 1.22.x ]
 
     outputs:
       tags: ${{ steps.meta.outputs.tags }}
