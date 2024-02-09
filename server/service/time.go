@@ -43,7 +43,7 @@ func (s *BlockByTime) At(ctx context.Context, in *pbbmsrv.TimeReq) (*pbbmsrv.Blo
 }
 
 func (s *BlockByTime) Before(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*pbbmsrv.BlockResp, error) {
-	s.log.Info("handling Before request", "block_time", in.Time)
+	slog.Info("handling Before request", "block_time", in.Time)
 	prefix := Keyer.PackTimePrefixKey(in.Time.AsTime(), false)
 
 	response, err := s.sinkClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})
