@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	pbbmsrv "github.com/streamingfast/blockmeta-service/pb/sf/blockmeta/v2"
 	pbkv "github.com/streamingfast/blockmeta-service/pb/sf/substreams/sink/kv/v1"
@@ -20,6 +21,7 @@ func NewBlockByTimeService(sinkClient pbkv.KvClient) *BlockByTime {
 }
 
 func (s *BlockByTime) At(ctx context.Context, in *pbbmsrv.TimeReq) (*pbbmsrv.BlockResp, error) {
+	slog.Info("handling At request", "block_time", in.Time)
 	prefix := Keyer.PackTimePrefixKey(in.Time.AsTime(), false)
 
 	response, err := s.sinkClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix})
@@ -41,6 +43,7 @@ func (s *BlockByTime) At(ctx context.Context, in *pbbmsrv.TimeReq) (*pbbmsrv.Blo
 }
 
 func (s *BlockByTime) Before(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*pbbmsrv.BlockResp, error) {
+	s.log.Info("handling Before request", "block_time", in.Time)
 	prefix := Keyer.PackTimePrefixKey(in.Time.AsTime(), false)
 
 	response, err := s.sinkClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})
@@ -69,6 +72,7 @@ func (s *BlockByTime) Before(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (
 }
 
 func (s *BlockByTime) After(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*pbbmsrv.BlockResp, error) {
+	slog.Info("handling After request", "block_time", in.Time)
 	prefix := Keyer.PackTimePrefixKey(in.Time.AsTime(), true)
 
 	response, err := s.sinkClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})

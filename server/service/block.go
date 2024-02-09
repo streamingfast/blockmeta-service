@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	pbbmsrv "github.com/streamingfast/blockmeta-service/pb/sf/blockmeta/v2"
 	pbkv "github.com/streamingfast/blockmeta-service/pb/sf/substreams/sink/kv/v1"
@@ -19,6 +20,7 @@ func NewBlockService(sinkClient pbkv.KvClient) *Block {
 }
 
 func (s *Block) NumToID(ctx context.Context, in *pbbmsrv.NumToIDReq) (*pbbmsrv.BlockResp, error) {
+	slog.Info("handling NumToID request", "block_num", in.BlockNum)
 	prefix := Keyer.PackNumPrefixKey(in.BlockNum)
 
 	response, err := s.sinkClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix})
@@ -40,7 +42,7 @@ func (s *Block) NumToID(ctx context.Context, in *pbbmsrv.NumToIDReq) (*pbbmsrv.B
 }
 
 func (s *Block) IDToNum(ctx context.Context, in *pbbmsrv.IDToNumReq) (*pbbmsrv.BlockResp, error) {
-
+	slog.Info("handling IDToNum request", "block_id", in.BlockID)
 	prefix := Keyer.PackIDPrefixKey(in.BlockID)
 
 	response, err := s.sinkClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix})
@@ -62,6 +64,7 @@ func (s *Block) IDToNum(ctx context.Context, in *pbbmsrv.IDToNumReq) (*pbbmsrv.B
 }
 
 func (s *Block) Head(ctx context.Context, in *pbbmsrv.Empty) (*pbbmsrv.BlockResp, error) {
+	slog.Info("handling Head request")
 	prefix := TblPrefixTimelineBck + ":"
 
 	response, err := s.sinkClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix, Limit: 1})
