@@ -6,10 +6,10 @@ managed:
   enabled: false
 plugins:
   - name: go
-    out: pb
+    out: ../pb
     opt: paths=source_relative
   - plugin: go-grpc
-    out: pb
+    out: ../pb
     opt:
       - paths=source_relative
       - require_unimplemented_servers=false
