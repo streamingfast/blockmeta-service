@@ -1,6 +1,6 @@
 module github.com/streamingfast/blockmeta-service
 
-go 1.22
+go 1.21
 
 require (
 	github.com/streamingfast/dgrpc v0.0.0-20240119162453-69517bcc1a7f
