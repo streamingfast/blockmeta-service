@@ -4,12 +4,6 @@
 
 The Block Meta Service API provides a set of gRPC services for querying blockchain block metadata. It enables users to retrieve block IDs using block numbers, convert block IDs to block numbers, fetch the latest block information, and query blocks by specific timestamps.
 
-## Blockchains supported 
-- Bitcoin
-- Ethereum
-- Solana
-- ...
-
 ## Services
 
 ### Block Service
@@ -47,59 +41,56 @@ The `BlockByTime` service provides capabilities to query block information based
 
 ## Endpoints
 
-To interact with the Block Meta Service, clients should use the following gRPC endpoints:
-
-- `BlockServiceEndpoint`:
-- `BlockByTimeServiceEndpoint`:
+To interact with the Block Meta Service, clients should use the gRPC endpoints provided by streamingFast for all the chains 
 
 ## Example Query and Response
 
 ### Querying block information using a block number
 
 ```
-grpcurl --plaintext -proto server/proto/sf/blockmeta/v2/blockmeta.proto   -d '{"blockNum": "501"}' localhost:50051 sf.blockmeta.v2.Block/NumToID
+grpcurl -proto server/proto/sf/blockmeta/v2/blockmeta.proto   -d '{"blockNum": "501"}' holesky.eth.streamingfast.io:443 sf.blockmeta.v2.Block/NumToID
 ```
 
 ```json
 {
-  "id": "91ca6ecb7cec2999ee2d583a8b975ca7fe99aec27b651b76e169427f27de90ad",
+  "id": "00cd01a162b0bc1e9a88eb8718891dd31984f3fb64c2392570d310d8a5f05bf6",
   "num": "501",
-  "time": "2015-07-30T15:46:54Z"
+  "time": "2023-09-28T14:16:24Z"
 }
 ```
 
 ### Querying block information using a block ID
 
 ```
-grpcurl --plaintext -proto server/proto/sf/blockmeta/v2/blockmeta.proto  -d '{"blockID": "91ca6ecb7cec2999ee2d583a8b975ca7fe99aec27b651b76e169427f27de90ad"}' localhost:50051 sf.blockmeta.v2.Block/IDToNum
+grpcurl -proto server/proto/sf/blockmeta/v2/blockmeta.proto  -d '{"blockID": "0000000046887292a76cd113a5fd6af38b17c9fb77e5936cd9856694030598f9"}' mainnet.btc.streamingfast.io:443 sf.blockmeta.v2.Block/IDToNum
 ```
 
 ```json
 {
-  "id": "91ca6ecb7cec2999ee2d583a8b975ca7fe99aec27b651b76e169427f27de90ad",
+  "id": "0000000046887292a76cd113a5fd6af38b17c9fb77e5936cd9856694030598f9",
   "num": "501",
-  "time": "2015-07-30T15:46:54Z"
+  "time": "2009-01-14T21:38:31Z"
 }
 ```
 
 ### Querying head block information
 
 ```
-grpcurl --plaintext -proto server/proto/sf/blockmeta/v2/blockmeta.proto localhost:50051 sf.blockmeta.v2.Block/Head
+grpcurl -proto ./proto/sf/blockmeta/v2/blockmeta.proto  holesky.eth.streamingfast.io:443 sf.blockmeta.v2.Block/Head
 ```
 
 ```json
 {
-  "id": "1cddf333f43b88edb8dcf30861542f13297e3e5a90fd03ec044926c3440ea748",
-  "num": "19213975",
-  "time": "2024-02-12T19:17:23Z"
+  "id": "50446fbfca349144a5346106038c1865e753cf138db9d3f6ef25224f75c198e9",
+  "num": "931897",
+  "time": "2024-02-12T22:12:24Z"
 }
 ```
 
 ### Querying block information at a specific timestamp
 
 ```  
-grpcurl --plaintext -proto server/proto/sf/blockmeta/v2/blockmeta.proto -d '{"time": "2024-02-12T19:17:23Z"}' localhost:50051 sf.blockmeta.v2.BlockByTime/At
+ grpcurl -proto ./proto/sf/blockmeta/v2/blockmeta.proto -d '{"time": "2024-02-12T19:17:23Z"}' mainnet.eth.streamingfast.io:443 sf.blockmeta.v2.BlockByTime/At
 
 ```
 
@@ -114,7 +105,7 @@ grpcurl --plaintext -proto server/proto/sf/blockmeta/v2/blockmeta.proto -d '{"ti
 ### Querying block information after a specific timestamp by setting inclusive to true
 
 ```
- grpcurl --plaintext -proto server/proto/sf/blockmeta/v2/blockmeta.proto -d '{"time": "2024-02-12T19:17:23Z", "inclusive": "true"}' localhost:50051 sf.blockmeta.v2.BlockByTime/After
+ grpcurl -proto server/proto/sf/blockmeta/v2/blockmeta.proto -d '{"time": "2024-02-12T19:17:23Z", "inclusive": "true"}' mainnet.eth.streamingfast.io:443 sf.blockmeta.v2.BlockByTime/After
 ```
 
 ```json
@@ -127,7 +118,8 @@ grpcurl --plaintext -proto server/proto/sf/blockmeta/v2/blockmeta.proto -d '{"ti
 ### Querying block information before a specific timestamp by setting inclusive to false
 
 ```
-grpcurl --plaintext -proto server/proto/sf/blockmeta/v2/blockmeta.proto -d '{"time": "2024-02-12T19:17:23Z", "inclusive": "false"}' localhost:50051 sf.blockmeta.v2.BlockByTime/Before```
+grpcurl -proto server/proto/sf/blockmeta/v2/blockmeta.proto -d '{"time": "2024-02-12T19:17:23Z", "inclusive": "false"}' mainnet.eth.streamingfast.io:443 sf.blockmeta.v2.BlockByTime/Before```
+```
 
 ```json
 {
