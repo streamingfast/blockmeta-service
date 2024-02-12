@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"time"
@@ -11,8 +12,17 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+var (
+	serverAddress = flag.String("server-addr", "localhost:50051", "The server address")
+)
+
 func main() {
-	conn, err := dgrpc.NewInternalClient("localhost:50051")
+	flag.Parse()
+	if *serverAddress == "" {
+		log.Fatalf("You must provide a server address using the -server-addr flag.")
+	}
+
+	conn, err := dgrpc.NewInternalClient(*serverAddress)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
