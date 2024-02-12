@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/streamingfast/dgrpc/server/factory"
@@ -43,6 +44,14 @@ func main() {
 		dgrpcserver.WithHealthCheck(dgrpcserver.HealthCheckOverGRPC|dgrpcserver.HealthCheckOverHTTP, healthCheck()),
 	}
 
+	if strings.Contains(*listenAddress, "*") {
+		options = append(options, dgrpcserver.WithInsecureServer())
+	} else {
+		options = append(options, dgrpcserver.WithPlainTextServer())
+	}
+
+	cleanListenAddress := strings.ReplaceAll(*listenAddress, "*", "")
+
 	grpcServer := factory.ServerFromOptions(options...)
 	grpcServer.RegisterService(func(gs grpc.ServiceRegistrar) {
 		pbbmsrv.RegisterBlockServer(gs, blockService)
@@ -50,8 +59,8 @@ func main() {
 	})
 
 	go func() {
-		logger.Info("launching gRPC server", "listen_address", *listenAddress)
-		grpcServer.Launch(*listenAddress)
+		logger.Info("launching gRPC server", "listen_address", cleanListenAddress)
+		grpcServer.Launch(cleanListenAddress)
 	}()
 
 	<-derr.SetupSignalHandler(30 * time.Second)
