@@ -1,6 +1,6 @@
 module github.com/streamingfast/blockmeta-service
 
-go 1.21
+go 1.22
 
 require (
 	github.com/streamingfast/derr v0.0.0-20230515163924-8570aaa43fe1

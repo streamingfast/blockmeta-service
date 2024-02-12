@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"flag"
+	"os"
+	"time"
+
 	"github.com/streamingfast/dgrpc/server/factory"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"os"
-	"time"
 
 	pbbmsrv "github.com/streamingfast/blockmeta-service/pb/sf/blockmeta/v2"
 	"github.com/streamingfast/blockmeta-service/service"
@@ -28,6 +29,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if *listenAddress == "" {
+		logger.Error("listen address is required")
+		os.Exit(1)
+	}
+
 	sinkClient := service.ConnectToSinkServer(*sinkServerAddress)
 	blockService := service.NewBlockService(sinkClient)
 	blockByTimeService := service.NewBlockByTimeService(sinkClient)
@@ -38,15 +44,17 @@ func main() {
 	}
 
 	grpcServer := factory.ServerFromOptions(options...)
-
 	grpcServer.RegisterService(func(gs grpc.ServiceRegistrar) {
 		pbbmsrv.RegisterBlockServer(gs, blockService)
 		pbbmsrv.RegisterBlockByTimeServer(gs, blockByTimeService)
 	})
 
-	go grpcServer.Launch(*listenAddress)
-	<-derr.SetupSignalHandler(30 * time.Second)
+	go func() {
+		logger.Info("launching gRPC server", "listen_address", *listenAddress)
+		grpcServer.Launch(*listenAddress)
+	}()
 
+	<-derr.SetupSignalHandler(30 * time.Second)
 }
 
 func healthCheck() dgrpcserver.HealthCheck {
