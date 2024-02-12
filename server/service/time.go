@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/status"
 	"log/slog"
 
 	pbbmsrv "github.com/streamingfast/blockmeta-service/pb/sf/blockmeta/v2"
@@ -30,12 +31,12 @@ func (s *BlockByTime) At(ctx context.Context, in *pbbmsrv.TimeReq) (*pbbmsrv.Blo
 	}
 
 	if len(response.KeyValues) > 1 {
-		return nil, fmt.Errorf("more than one block found for block timestamp: %v", in.Time)
+		return nil, status.Errorf(500, "more than one block found for block timestamp: %v", in.Time)
 	}
 
 	blockPbTimestamp, blockID, err := Keyer.UnpackTimeIDKey(response.KeyValues[0].Key, false)
 	if err != nil {
-		return nil, fmt.Errorf("error unpacking block number and block ID: %w", err)
+		return nil, status.Errorf(500, "error unpacking block number and block ID: %w", err)
 	}
 
 	blockNum := valueToBlockNumber(response.KeyValues[0].Value)
@@ -58,7 +59,7 @@ func (s *BlockByTime) Before(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (
 	for i := 0; i < len(response.KeyValues); i++ {
 		blockPbTimestamp, blockID, err = Keyer.UnpackTimeIDKey(response.KeyValues[i].Key, false)
 		if err != nil {
-			return nil, fmt.Errorf("error unpacking block number and block ID: %w", err)
+			return nil, status.Errorf(13, "error unpacking block number and block ID: %w", err)
 		}
 
 		if !in.Inclusive && (blockPbTimestamp.AsTime() == in.Time.AsTime()) {
@@ -77,7 +78,7 @@ func (s *BlockByTime) After(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*
 
 	response, err := s.sinkClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})
 	if err != nil {
-		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
+		return nil, status.Errorf(13, "error getting block data from sink server: %w", err)
 	}
 
 	var blockID string
@@ -88,7 +89,7 @@ func (s *BlockByTime) After(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*
 
 		blockPbTimestamp, blockID, err = Keyer.UnpackTimeIDKey(response.KeyValues[i].Key, true)
 		if err != nil {
-			return nil, fmt.Errorf("error unpacking block number and block ID: %w", err)
+			return nil, status.Errorf(13, "error unpacking block number and block ID: %w", err)
 		}
 
 		if !in.Inclusive && (blockPbTimestamp.AsTime() == in.Time.AsTime()) {
