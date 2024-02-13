@@ -23,15 +23,13 @@ service Block {
 
 message Empty {}
 
+// The BlockByTime service provides capabilities to query block information based on specific timestamps.
 service BlockByTime {
-  //The BlockByTime service provides capabilities to query block information based on specific timestamps.
-
-  //At(TimeReq): Returns the block at a specified timestamp.
-  //After(RelativeTimeReq): Returns the first block after a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
-  //Before(RelativeTimeReq): Returns the last block before a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
-
+  // At(TimeReq): Returns the block at a specified timestamp.
   rpc At (TimeReq) returns (BlockResp);
+  // After(RelativeTimeReq): Returns the first block after a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
   rpc After (RelativeTimeReq) returns (BlockResp);
+  // Before(RelativeTimeReq): Returns the last block before a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
   rpc Before (RelativeTimeReq) returns (BlockResp);
 }
 
