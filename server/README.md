@@ -1,20 +1,20 @@
+# Table of Contents
+- [Overview](#overview)
+- [Installation](#installation)
+- [Running](#running)
+- [Examples Queries and Responses](#examples-queries-and-responses)
+    - [Block Service](#block-service)
+        - [Querying block information using a block number](#querying-block-information-using-a-block-number)
+        - [Querying block information using a block ID](#querying-block-information-using-a-block-id)
+        - [Querying head block information](#querying-head-block-information)
+    - [BlockByTime Service](#blockbytime-service)
+        - [Querying block information at a specific timestamp](#querying-block-information-at-a-specific-timestamp)
+        - [Querying block information after a specific timestamp by setting inclusive to true](#querying-block-information-after-a-specific-timestamp-by-setting-inclusive-to-true)
+        - [Querying block information before a specific timestamp by setting inclusive to false](#querying-block-information-before-a-specific-timestamp-by-setting-inclusive-to-false)
+
 ## Overview
 The Block Meta Service API provides a set of gRPC services for querying blockchain block metadata. It enables users to retrieve block IDs using block numbers,
 convert block IDs to block numbers, fetch the latest block information, and query blocks by specific timestamps.
-
-# Table of Contents
-
-- [Installation](#installation)
-- [Running](#running)
-- [Examples Queries and Responses](#examples-aueries-and-responses)
-  - [Block Service](#block-service)
-    - [Querying block information using a block number](#querying-block-information-using-a-block-number)
-    - [Querying block information using a block ID](#querying-block-information-using-a-block-id)
-    - [Querying head block information](#querying-head-block-information)
-  - [BlockByTime Service](#blockbytime-service)
-    - [Querying block information at a specific timestamp](#querying-block-information-at-a-specific-timestamp)
-    - [Querying block information after a specific timestamp by setting inclusive to true](#querying-block-information-after-a-specific-timestamp-by-setting-inclusive-to-true)
-    - [Querying block information before a specific timestamp by setting inclusive to false](#querying-block-information-before-a-specific-timestamp-by-setting-inclusive-to-false)
 
 ## Installation
 
