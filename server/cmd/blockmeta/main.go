@@ -8,8 +8,8 @@ import (
 
 	"github.com/streamingfast/blockmeta-service/server"
 	"github.com/streamingfast/dauth"
-	_ "github.com/streamingfast/dauth/grpc"
-	_ "github.com/streamingfast/dauth/null"
+	authGrpc "github.com/streamingfast/dauth/grpc"
+	authNull "github.com/streamingfast/dauth/null"
 	"github.com/streamingfast/derr"
 	"go.uber.org/zap"
 )
@@ -24,6 +24,9 @@ var (
 func main() {
 	flag.Parse()
 	ctx := context.Background()
+
+	authGrpc.Register()
+	authNull.Register()
 
 	if *sinkServerAddress == "" {
 		zlog.Error("sink server address is required")
