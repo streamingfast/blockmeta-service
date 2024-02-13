@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	pbbmsrv "github.com/streamingfast/blockmeta-service/pb/sf/blockmeta/v2"
+	pbbmsrv "github.com/streamingfast/blockmeta-service/server/pb/sf/blockmeta/v2"
 	"github.com/streamingfast/dgrpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

@@ -1,22 +1,23 @@
-package service
+package server
 
 import (
 	"log"
 	"math/big"
 	"time"
 
-	pbkv "github.com/streamingfast/blockmeta-service/pb/sf/substreams/sink/kv/v1"
+	"github.com/streamingfast/substreams-sink-kv/pb/substreams/sink/kv/v1/kvv1connect"
+
 	"github.com/streamingfast/dgrpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func ConnectToSinkServer(host string) pbkv.KvClient {
+func ConnectToSinkServer(host string) kvv1connect.KvClient {
 	conn, err := dgrpc.NewInternalClient(host)
 	if err != nil {
 		log.Fatalf("did not connect to the sink server: %v", err)
 	}
 
-	return pbkv.NewKvClient(conn)
+	return kvv1connect.NewKvClient(conn, "")
 }
 
 func valueToTimestamp(timestampAsBytes []byte) (pbTimestamp *timestamppb.Timestamp) {

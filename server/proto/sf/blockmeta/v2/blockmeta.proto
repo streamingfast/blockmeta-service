@@ -2,7 +2,7 @@ syntax = "proto3";
 package sf.blockmeta.v2;
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/streamingfast/blockmeta-service;pbbmsrv";
+option go_package = "github.com/streamingfast/blockmeta-service/server/pb/sf/blockmeta/v2;pbbmsrv";
 
 //## Overview
 
