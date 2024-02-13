@@ -22,8 +22,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BlockClient interface {
+	// Returns the (block ID, number, and timestamp), given a block number.
 	NumToID(ctx context.Context, in *NumToIDReq, opts ...grpc.CallOption) (*BlockResp, error)
+	// Returns the (block ID, number, and timestamp), given a block ID.
 	IDToNum(ctx context.Context, in *IDToNumReq, opts ...grpc.CallOption) (*BlockResp, error)
+	// Returns the latest block's ID, number, and timestamp.
 	Head(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*BlockResp, error)
 }
 
@@ -66,8 +69,11 @@ func (c *blockClient) Head(ctx context.Context, in *Empty, opts ...grpc.CallOpti
 // All implementations should embed UnimplementedBlockServer
 // for forward compatibility
 type BlockServer interface {
+	// Returns the (block ID, number, and timestamp), given a block number.
 	NumToID(context.Context, *NumToIDReq) (*BlockResp, error)
+	// Returns the (block ID, number, and timestamp), given a block ID.
 	IDToNum(context.Context, *IDToNumReq) (*BlockResp, error)
+	// Returns the latest block's ID, number, and timestamp.
 	Head(context.Context, *Empty) (*BlockResp, error)
 }
 
@@ -178,11 +184,11 @@ var Block_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BlockByTimeClient interface {
-	// At(TimeReq): Returns the block at a specified timestamp.
+	// Returns the block at a specified timestamp.
 	At(ctx context.Context, in *TimeReq, opts ...grpc.CallOption) (*BlockResp, error)
-	// After(RelativeTimeReq): Returns the first block after a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
+	// Returns the first block after a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
 	After(ctx context.Context, in *RelativeTimeReq, opts ...grpc.CallOption) (*BlockResp, error)
-	// Before(RelativeTimeReq): Returns the last block before a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
+	// Returns the last block before a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
 	Before(ctx context.Context, in *RelativeTimeReq, opts ...grpc.CallOption) (*BlockResp, error)
 }
 
@@ -225,11 +231,11 @@ func (c *blockByTimeClient) Before(ctx context.Context, in *RelativeTimeReq, opt
 // All implementations should embed UnimplementedBlockByTimeServer
 // for forward compatibility
 type BlockByTimeServer interface {
-	// At(TimeReq): Returns the block at a specified timestamp.
+	// Returns the block at a specified timestamp.
 	At(context.Context, *TimeReq) (*BlockResp, error)
-	// After(RelativeTimeReq): Returns the first block after a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
+	// Returns the first block after a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
 	After(context.Context, *RelativeTimeReq) (*BlockResp, error)
-	// Before(RelativeTimeReq): Returns the last block before a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
+	// Returns the last block before a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
 	Before(context.Context, *RelativeTimeReq) (*BlockResp, error)
 }
 

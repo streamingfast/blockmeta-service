@@ -266,6 +266,7 @@ func (x *TimeReq) GetTime() *timestamppb.Timestamp {
 	return nil
 }
 
+// Used to query block information after or before a specific timestamp. It include a boolean flag to indicate if the query is inclusive or not (if the block at the specified timestamp should be included in the response or not).
 type RelativeTimeReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

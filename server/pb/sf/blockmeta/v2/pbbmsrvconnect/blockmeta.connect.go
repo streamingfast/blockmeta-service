@@ -63,8 +63,11 @@ var (
 
 // BlockClient is a client for the sf.blockmeta.v2.Block service.
 type BlockClient interface {
+	// Returns the (block ID, number, and timestamp), given a block number.
 	NumToID(context.Context, *connect.Request[v2.NumToIDReq]) (*connect.Response[v2.BlockResp], error)
+	// Returns the (block ID, number, and timestamp), given a block ID.
 	IDToNum(context.Context, *connect.Request[v2.IDToNumReq]) (*connect.Response[v2.BlockResp], error)
+	// Returns the latest block's ID, number, and timestamp.
 	Head(context.Context, *connect.Request[v2.Empty]) (*connect.Response[v2.BlockResp], error)
 }
 
@@ -123,8 +126,11 @@ func (c *blockClient) Head(ctx context.Context, req *connect.Request[v2.Empty]) 
 
 // BlockHandler is an implementation of the sf.blockmeta.v2.Block service.
 type BlockHandler interface {
+	// Returns the (block ID, number, and timestamp), given a block number.
 	NumToID(context.Context, *connect.Request[v2.NumToIDReq]) (*connect.Response[v2.BlockResp], error)
+	// Returns the (block ID, number, and timestamp), given a block ID.
 	IDToNum(context.Context, *connect.Request[v2.IDToNumReq]) (*connect.Response[v2.BlockResp], error)
+	// Returns the latest block's ID, number, and timestamp.
 	Head(context.Context, *connect.Request[v2.Empty]) (*connect.Response[v2.BlockResp], error)
 }
 
@@ -183,8 +189,11 @@ func (UnimplementedBlockHandler) Head(context.Context, *connect.Request[v2.Empty
 
 // BlockByTimeClient is a client for the sf.blockmeta.v2.BlockByTime service.
 type BlockByTimeClient interface {
+	// Returns the block at a specified timestamp.
 	At(context.Context, *connect.Request[v2.TimeReq]) (*connect.Response[v2.BlockResp], error)
+	// Returns the first block after a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
 	After(context.Context, *connect.Request[v2.RelativeTimeReq]) (*connect.Response[v2.BlockResp], error)
+	// Returns the last block before a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
 	Before(context.Context, *connect.Request[v2.RelativeTimeReq]) (*connect.Response[v2.BlockResp], error)
 }
 
@@ -243,8 +252,11 @@ func (c *blockByTimeClient) Before(ctx context.Context, req *connect.Request[v2.
 
 // BlockByTimeHandler is an implementation of the sf.blockmeta.v2.BlockByTime service.
 type BlockByTimeHandler interface {
+	// Returns the block at a specified timestamp.
 	At(context.Context, *connect.Request[v2.TimeReq]) (*connect.Response[v2.BlockResp], error)
+	// Returns the first block after a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
 	After(context.Context, *connect.Request[v2.RelativeTimeReq]) (*connect.Response[v2.BlockResp], error)
+	// Returns the last block before a specified timestamp (or the block at the specified timestamp if it exists, if the query is inclusive).
 	Before(context.Context, *connect.Request[v2.RelativeTimeReq]) (*connect.Response[v2.BlockResp], error)
 }
 
