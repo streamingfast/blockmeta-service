@@ -38,7 +38,7 @@ type GrpcServer struct {
 	sinkClient         pbkv.KvClient
 }
 
-func NewGrpcServer(corsHostRegexAllow *regexp.Regexp, logger *zap.Logger, httpListenAddr string, authenticator dauth.Authenticator, sinkClient pbkv.KvClient) *GrpcServer {
+func NewGrpcServer(httpListenAddr string, sinkClient pbkv.KvClient, corsHostRegexAllow *regexp.Regexp, authenticator dauth.Authenticator, logger *zap.Logger) *GrpcServer {
 	return &GrpcServer{
 		corsHostRegexAllow: corsHostRegexAllow,
 		logger:             logger,
@@ -231,7 +231,7 @@ func (s *GrpcServer) At(ctx context.Context, in connect.Request[pbbmsrv.TimeReq]
 
 	blockPbTimestamp, blockID, err := Keyer.UnpackTimeIDKey(response.KeyValues[0].Key, false)
 	if err != nil {
-		return nil, status.Errorf(500, "error unpacking block number and block ID: %w", err)
+		return nil, status.Errorf(500, "error unpacking block number and block ID: %s", err)
 	}
 
 	blockNum := valueToBlockNumber(response.KeyValues[0].Value)
@@ -254,7 +254,7 @@ func (s *GrpcServer) Before(ctx context.Context, in *connect.Request[pbbmsrv.Rel
 	for i := 0; i < len(response.KeyValues); i++ {
 		blockPbTimestamp, blockID, err = Keyer.UnpackTimeIDKey(response.KeyValues[i].Key, false)
 		if err != nil {
-			return nil, status.Errorf(13, "error unpacking block number and block ID: %w", err)
+			return nil, status.Errorf(13, "error unpacking block number and block ID: %s", err)
 		}
 
 		if !in.Msg.Inclusive && (blockPbTimestamp.AsTime() == in.Msg.Time.AsTime()) {
@@ -273,7 +273,7 @@ func (s *GrpcServer) After(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*p
 
 	response, err := s.sinkClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})
 	if err != nil {
-		return nil, status.Errorf(13, "error getting block data from sink server: %w", err)
+		return nil, status.Errorf(13, "error getting block data from sink server: %s", err)
 	}
 
 	var blockID string
@@ -284,7 +284,7 @@ func (s *GrpcServer) After(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*p
 
 		blockPbTimestamp, blockID, err = Keyer.UnpackTimeIDKey(response.KeyValues[i].Key, true)
 		if err != nil {
-			return nil, status.Errorf(13, "error unpacking block number and block ID: %w", err)
+			return nil, status.Errorf(13, "error unpacking block number and block ID: %s", err)
 		}
 
 		if !in.Inclusive && (blockPbTimestamp.AsTime() == in.Time.AsTime()) {

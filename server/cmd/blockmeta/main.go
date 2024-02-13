@@ -1,19 +1,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 	"regexp"
-	"time"
 
-	server "github.com/streamingfast/blockmeta-service/server"
-	pbbmsrv "github.com/streamingfast/blockmeta-service/server/pb/sf/blockmeta/v2"
-	"github.com/streamingfast/blockmeta-service/server/service"
+	"github.com/streamingfast/blockmeta-service/server"
 	"github.com/streamingfast/dauth"
 	"github.com/streamingfast/derr"
-	"github.com/streamingfast/dgrpc/server/factory"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -25,6 +21,7 @@ var (
 
 func main() {
 	flag.Parse()
+	ctx := context.Background()
 
 	if *sinkServerAddress == "" {
 		zlog.Error("sink server address is required")
@@ -37,10 +34,8 @@ func main() {
 	}
 
 	sinkClient := server.ConnectToSinkServer(*sinkServerAddress)
-	blockService := service.NewBlockService(sinkClient)
-	blockByTimeService := service.NewBlockByTimeService(sinkClient)
 
-	auth, err := dauth.New(*authUrl, zlog)
+	authenticator, err := dauth.New(*authUrl, zlog)
 	if err != nil {
 		zlog.Error("unable to create authenticator", zap.Error(err))
 		os.Exit(1)
@@ -56,18 +51,17 @@ func main() {
 		corsHostRegexAllow = hostRegex
 	}
 
-	grpcServer := server.NewGrpcServer(corsHostRegexAllow, zlog, *listenAddress, auth)
-
-	grpcServer := factory.ServerFromOptions(options...)
-	grpcServer.RegisterService(func(gs grpc.ServiceRegistrar) {
-		pbbmsrv.RegisterBlockServer(gs, blockService)
-		pbbmsrv.RegisterBlockByTimeServer(gs, blockByTimeService)
-	})
-
+	grpcServer := server.NewGrpcServer(*listenAddress, sinkClient, corsHostRegexAllow, authenticator, zlog)
+	signal := derr.SetupSignalHandler(0)
 	go func() {
-		zlog.Info("launching gRPC server", zap.String("listen_address", cleanListenAddress))
-		grpcServer.Launch(cleanListenAddress)
+		<-signal
+		grpcServer.Shutdown(nil)
 	}()
 
-	<-derr.SetupSignalHandler(30 * time.Second)
+	grpcServer.Run(ctx)
+	<-grpcServer.Terminated()
+	if grpcServer.Err() != nil {
+		zlog.Error("server terminated with error", zap.Error(grpcServer.Err()))
+		os.Exit(1)
+	}
 }

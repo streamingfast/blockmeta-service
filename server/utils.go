@@ -5,19 +5,18 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/streamingfast/substreams-sink-kv/pb/substreams/sink/kv/v1/kvv1connect"
-
 	"github.com/streamingfast/dgrpc"
+	kvv1 "github.com/streamingfast/substreams-sink-kv/pb/substreams/sink/kv/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func ConnectToSinkServer(host string) kvv1connect.KvClient {
+func ConnectToSinkServer(host string) kvv1.KvClient {
 	conn, err := dgrpc.NewInternalClient(host)
 	if err != nil {
 		log.Fatalf("did not connect to the sink server: %v", err)
 	}
 
-	return kvv1connect.NewKvClient(conn, "")
+	return kvv1.NewKvClient(conn)
 }
 
 func valueToTimestamp(timestampAsBytes []byte) (pbTimestamp *timestamppb.Timestamp) {
