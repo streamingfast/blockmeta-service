@@ -40,6 +40,7 @@ type GrpcServer struct {
 
 func NewGrpcServer(httpListenAddr string, sinkClient pbkv.KvClient, corsHostRegexAllow *regexp.Regexp, authenticator dauth.Authenticator, logger *zap.Logger) *GrpcServer {
 	return &GrpcServer{
+		Shutter:            shutter.New(),
 		corsHostRegexAllow: corsHostRegexAllow,
 		logger:             logger,
 		authenticator:      authenticator,
