@@ -6,25 +6,13 @@ option go_package = "github.com/streamingfast/blockmeta-service/server/pb/sf/blo
 
 //The Block service offers functionalities to map block numbers to block IDs, block IDs to their corresponding block numbers, and to retrieve the latest block information.
 service Block {
-  /**
-  * Returns the block ID, number, and timestamp, given a block number.
-  *
-  * Example:
-  * grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"blockNum": "501"}' holesky.eth.streamingfast.io:443 sf.blockmeta.v2.Block/NumToID
-  *
-  * Response:
-  * {
-  * "id": "00cd01a162b0bc1e9a88eb8718891dd31984f3fb64c2392570d310d8a5f05bf6",
-  * "num": "501",
-  * "time": "2023-09-28T14:16:24Z"
-  * }
-  *
-  */
+  // Returns the (block ID, number, and timestamp), given a block number.
   rpc NumToID (NumToIDReq) returns (BlockResp);
-  // Given a block ID, returns the block ID, number, and timestamp.
+  // Returns the (block ID, number, and timestamp), given a block ID.
   rpc IDToNum(IDToNumReq) returns (BlockResp);
-  rpc Head(Empty) returns (BlockResp);
   // Returns the latest block's ID, number, and timestamp.
+  rpc Head(Empty) returns (BlockResp);
+
 }
 
 message Empty {}
@@ -60,7 +48,7 @@ message TimeReq {
   google.protobuf.Timestamp time = 1;
 }
 
-// The relative time request is used to query block information after or before a specific timestamp. It include a boolean flag to indicate if the query is inclusive or not (if the block at the specified timestamp should be included in the response or not).
+// Used to query block information after or before a specific timestamp. It include a boolean flag to indicate if the query is inclusive or not (if the block at the specified timestamp should be included in the response or not).
 message RelativeTimeReq {
   google.protobuf.Timestamp time = 1;
   bool inclusive = 2;
