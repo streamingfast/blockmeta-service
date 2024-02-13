@@ -8,6 +8,8 @@ import (
 
 	"github.com/streamingfast/blockmeta-service/server"
 	"github.com/streamingfast/dauth"
+	_ "github.com/streamingfast/dauth/grpc"
+	_ "github.com/streamingfast/dauth/null"
 	"github.com/streamingfast/derr"
 	"go.uber.org/zap"
 )
