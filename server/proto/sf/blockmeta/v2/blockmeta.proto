@@ -6,7 +6,20 @@ option go_package = "github.com/streamingfast/blockmeta-service/server/pb/sf/blo
 
 //The Block service offers functionalities to map block numbers to block IDs, block IDs to their corresponding block numbers, and to retrieve the latest block information.
 service Block {
-  // Given a block number, returns the block ID, number, and timestamp.
+  /**
+  * Returns the block ID, number, and timestamp, given a block number.
+  *
+  * Example:
+  * grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"blockNum": "501"}' holesky.eth.streamingfast.io:443 sf.blockmeta.v2.Block/NumToID
+  *
+  * Response:
+  * {
+  * "id": "00cd01a162b0bc1e9a88eb8718891dd31984f3fb64c2392570d310d8a5f05bf6",
+  * "num": "501",
+  * "time": "2023-09-28T14:16:24Z"
+  * }
+  *
+  */
   rpc NumToID (NumToIDReq) returns (BlockResp);
   // Given a block ID, returns the block ID, number, and timestamp.
   rpc IDToNum(IDToNumReq) returns (BlockResp);
