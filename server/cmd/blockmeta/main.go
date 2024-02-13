@@ -4,73 +4,64 @@ import (
 	"context"
 	"flag"
 	"os"
-	"strings"
-	"time"
+	"regexp"
 
-	"github.com/streamingfast/dgrpc/server/factory"
+	"github.com/streamingfast/blockmeta-service/server"
+	"github.com/streamingfast/dauth"
+	"github.com/streamingfast/derr"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
-
-	pbbmsrv "github.com/streamingfast/blockmeta-service/pb/sf/blockmeta/v2"
-	"github.com/streamingfast/blockmeta-service/service"
-	derr "github.com/streamingfast/derr"
-	dgrpcserver "github.com/streamingfast/dgrpc/server"
 )
 
 var (
-	listenAddress     = flag.String("grpc-listen-addr", "", "The gRPC server listen address")
-	sinkServerAddress = flag.String("sink-addr", "", "The sink server address")
+	listenAddress          = flag.String("grpc-listen-addr", "", "The gRPC server listen address")
+	sinkServerAddress      = flag.String("sink-addr", "", "The sink server address")
+	authUrl                = flag.String("auth-url", "null://", "The URL of the auth server")
+	corsHostRegexAllowFlag = flag.String("cors-host-regex-allow", "^localhost", "Regex to allow CORS origin requests from, defaults to localhost only")
 )
 
 func main() {
 	flag.Parse()
+	ctx := context.Background()
 
 	if *sinkServerAddress == "" {
-		logger.Error("sink server address is required")
+		zlog.Error("sink server address is required")
 		os.Exit(1)
 	}
 
 	if *listenAddress == "" {
-		logger.Error("listen address is required")
+		zlog.Error("listen address is required")
 		os.Exit(1)
 	}
 
-	sinkClient := service.ConnectToSinkServer(*sinkServerAddress)
-	blockService := service.NewBlockService(sinkClient)
-	blockByTimeService := service.NewBlockByTimeService(sinkClient)
+	sinkClient := server.ConnectToSinkServer(*sinkServerAddress)
 
-	options := []dgrpcserver.Option{
-		dgrpcserver.WithLogger(zap.NewNop()),
-		dgrpcserver.WithHealthCheck(dgrpcserver.HealthCheckOverGRPC|dgrpcserver.HealthCheckOverHTTP, healthCheck()),
+	authenticator, err := dauth.New(*authUrl, zlog)
+	if err != nil {
+		zlog.Error("unable to create authenticator", zap.Error(err))
+		os.Exit(1)
 	}
 
-	if strings.Contains(*listenAddress, "*") {
-		options = append(options, dgrpcserver.WithInsecureServer())
-	} else {
-		options = append(options, dgrpcserver.WithPlainTextServer())
+	var corsHostRegexAllow *regexp.Regexp
+	if *corsHostRegexAllowFlag != "" {
+		hostRegex, err := regexp.Compile(*corsHostRegexAllowFlag)
+		if err != nil {
+			zlog.Error("unable to compile cors-host-regex-allow", zap.Error(err))
+			os.Exit(1)
+		}
+		corsHostRegexAllow = hostRegex
 	}
 
-	cleanListenAddress := strings.ReplaceAll(*listenAddress, "*", "")
-
-	grpcServer := factory.ServerFromOptions(options...)
-	grpcServer.RegisterService(func(gs grpc.ServiceRegistrar) {
-		pbbmsrv.RegisterBlockServer(gs, blockService)
-		pbbmsrv.RegisterBlockByTimeServer(gs, blockByTimeService)
-	})
-
+	grpcServer := server.NewGrpcServer(*listenAddress, sinkClient, corsHostRegexAllow, authenticator, zlog)
+	signal := derr.SetupSignalHandler(0)
 	go func() {
-		logger.Info("launching gRPC server", "listen_address", cleanListenAddress)
-		grpcServer.Launch(cleanListenAddress)
+		<-signal
+		grpcServer.Shutdown(nil)
 	}()
 
-	<-derr.SetupSignalHandler(30 * time.Second)
-}
-
-func healthCheck() dgrpcserver.HealthCheck {
-	return func(ctx context.Context) (isReady bool, out interface{}, err error) {
-		if derr.IsShuttingDown() {
-			return false, nil, nil
-		}
-		return true, nil, nil
+	grpcServer.Run(ctx)
+	<-grpcServer.Terminated()
+	if grpcServer.Err() != nil {
+		zlog.Error("server terminated with error", zap.Error(grpcServer.Err()))
+		os.Exit(1)
 	}
 }

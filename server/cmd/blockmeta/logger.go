@@ -1,12 +1,7 @@
 package main
 
 import (
-	"log/slog"
-	"os"
+	"github.com/streamingfast/logging"
 )
 
-var logger *slog.Logger
-
-func init() {
-	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
-}
+var zlog, tracer = logging.RootLogger("blockmeta", "github.com/streamingfast/blockmeta-service/server/cmd/blockmeta")

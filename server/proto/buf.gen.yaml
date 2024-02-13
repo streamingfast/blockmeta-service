@@ -8,6 +8,9 @@ plugins:
   - name: go
     out: ../pb
     opt: paths=source_relative
+  - name: connect-go
+    out: ../pb
+    opt: paths=source_relative
   - plugin: go-grpc
     out: ../pb
     opt:
