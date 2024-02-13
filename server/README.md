@@ -1,17 +1,40 @@
-
 ## Overview
 The Block Meta Service API provides a set of gRPC services for querying blockchain block metadata. It enables users to retrieve block IDs using block numbers,
 convert block IDs to block numbers, fetch the latest block information, and query blocks by specific timestamps.
 
-## Endpoints
+# Table of Contents
 
-To interact with the Block Meta Service, clients should use the gRPC endpoints provided by streamingFast for all the chains
+- [Installation](#installation)
+- [Running](#running)
+- [Examples Queries and Responses](#examples-aueries-and-responses)
+  - [Block Service](#block-service)
+    - [Querying block information using a block number](#querying-block-information-using-a-block-number)
+    - [Querying block information using a block ID](#querying-block-information-using-a-block-id)
+    - [Querying head block information](#querying-head-block-information)
+  - [BlockByTime Service](#blockbytime-service)
+    - [Querying block information at a specific timestamp](#querying-block-information-at-a-specific-timestamp)
+    - [Querying block information after a specific timestamp by setting inclusive to true](#querying-block-information-after-a-specific-timestamp-by-setting-inclusive-to-true)
+    - [Querying block information before a specific timestamp by setting inclusive to false](#querying-block-information-before-a-specific-timestamp-by-setting-inclusive-to-false)
 
-## Example Query and Response
+## Installation
 
-### Querying block information using a block number
+## Running 
 
+To run a block-meta server, you can use the `blockmeta` binary. 
+The following command will start a block-meta server which will listen a specified address and will be connected to a specified sink-server
+from which it will extract the block metadata.
+
+```bash 
+blockmeta --sink-addr  localhost:9000 --grpc-listen-addr localhost:50051 
 ```
+
+## Examples Queries and Responses
+
+### Block Service 
+
+#### Querying block information using a block number
+
+```bash
 grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"blockNum": "501"}' holesky.eth.streamingfast.io:443 sf.blockmeta.v2.Block/NumToID
 ```
 
@@ -23,9 +46,9 @@ grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"blockNum": "501"}' hol
 }
 ```
 
-### Querying block information using a block ID
+#### Querying block information using a block ID
 
-```
+```bash
 grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"blockID": "0000000046887292a76cd113a5fd6af38b17c9fb77e5936cd9856694030598f9"}' mainnet.btc.streamingfast.io:443 sf.blockmeta.v2.Block/IDToNum
 ```
 
@@ -37,9 +60,9 @@ grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"blockID": "00000000468
 }
 ```
 
-### Querying head block information
+#### Querying head block information
 
-```
+```bash
 grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" .eth.streamingfast.io:443 sf.blockmeta.v2.Block/Head
 ```
 
@@ -51,11 +74,12 @@ grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" .eth.streamingfast.io:443 sf
 }
 ```
 
-### Querying block information at a specific timestamp
+### BlockByTime Service
 
-```
+#### Querying block information at a specific timestamp
+
+```bash
 grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"time": "2024-02-12T19:17:23Z"}' mainnet.eth.streamingfast.io:443 sf.blockmeta.v2.BlockByTime/At
-
 ```
 
 ```json
@@ -66,9 +90,9 @@ grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"time": "2024-02-12T19:
 }
 ```
 
-### Querying block information after a specific timestamp by setting inclusive to true
+#### Querying block information after a specific timestamp by setting inclusive to true
 
-```
+```bash
 grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"time": "2024-02-12T19:17:23Z", "inclusive": "true"}' mainnet.eth.streamingfast.io:443 sf.blockmeta.v2.BlockByTime/After
 ```
 
@@ -79,9 +103,9 @@ grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"time": "2024-02-12T19:
 "time": "2024-02-12T19:17:23Z"
 }
 ```
-### Querying block information before a specific timestamp by setting inclusive to false
+#### Querying block information before a specific timestamp by setting inclusive to false
 
-```
+```bash
 grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"time": "2024-02-12T19:17:23Z", "inclusive": "false"}' mainnet.eth.streamingfast.io:443 sf.blockmeta.v2.BlockByTime/Before```
 ```
 
