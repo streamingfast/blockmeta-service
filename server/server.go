@@ -71,8 +71,8 @@ func (s *GrpcServer) Run(ctx context.Context) {
 
 	streamHandlerGetter := func(opts ...connect.HandlerOption) (string, http.Handler) {
 		return pbbmsrvconnect.NewBlockHandler(s, opts...)
-
 	}
+
 	srv := connectweb.New([]connectweb.HandlerGetter{streamHandlerGetter}, options...)
 	addr := strings.ReplaceAll(s.httpListenAddr, "*", "")
 
@@ -141,6 +141,7 @@ func (s *GrpcServer) allowedOrigin(origin string) bool {
 }
 
 func (s *GrpcServer) healthCheck() dgrpcserver.HealthCheck {
+	s.logger.Debug("health checking")
 	return func(ctx context.Context) (isReady bool, out interface{}, err error) {
 		if derr.IsShuttingDown() {
 			return false, nil, nil

@@ -7,7 +7,7 @@ require (
 	github.com/rs/cors v1.8.3
 	github.com/streamingfast/dauth v0.0.0-20240213192022-da4946165b42
 	github.com/streamingfast/derr v0.0.0-20230515163924-8570aaa43fe1
-	github.com/streamingfast/dgrpc v0.0.0-20240213191930-14e90f32025f
+	github.com/streamingfast/dgrpc v0.0.0-20240214134727-3290b8959f76
 	github.com/streamingfast/logging v0.0.0-20221209193439-bff11742bf4c
 	github.com/streamingfast/shutter v1.5.0
 	github.com/streamingfast/substreams-sink-kv v0.1.3-0.20240213164553-1d839b800880
