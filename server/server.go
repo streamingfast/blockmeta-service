@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -23,6 +23,7 @@ import (
 	"github.com/streamingfast/shutter"
 	pbkv "github.com/streamingfast/substreams-sink-kv/pb/substreams/sink/kv/v1"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -150,23 +151,35 @@ func (s *GrpcServer) healthCheck() dgrpcserver.HealthCheck {
 	}
 }
 
+var InternalError = connect.NewError(connect.CodeInternal, errors.New("internal server error"))
+
+func (s *GrpcServer) toConnectError(err error) error {
+	if s, ok := status.FromError(err); ok {
+		if s.Code() == codes.NotFound {
+			return connect.NewError(connect.CodeNotFound, errors.New("block meta data not found"))
+		}
+	}
+
+	s.logger.Error("internal error", zap.Error(err))
+	return InternalError
+}
+
 func (s *GrpcServer) NumToID(ctx context.Context, in *connect.Request[pbbmsrv.NumToIDReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
-	slog.Info("handling NumToID request", "block_num", in.Msg.BlockNum)
+	s.logger.Info("handling NumToID request", zap.Uint64("block_num", in.Msg.BlockNum))
 	prefix := Keyer.PackNumPrefixKey(in.Msg.BlockNum)
 
 	response, err := s.sinkClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix})
 	if err != nil {
-		//grpcError already handled
-		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
+		return nil, s.toConnectError(err)
 	}
 
 	if len(response.KeyValues) > 1 {
-		return nil, status.Errorf(13, "more than one block found for block number: %v", in.Msg.BlockNum)
+		return nil, s.toConnectError(fmt.Errorf("more than one block found for block number %q: %w", in.Msg.BlockNum, err))
 	}
 
 	blockNum, blockID, err := Keyer.UnpackNumIDKey(response.KeyValues[0].Key)
 	if err != nil {
-		return nil, status.Errorf(13, "error unpacking block number and block ID: %v", err)
+		return nil, s.toConnectError(fmt.Errorf("unpacking block number and block ID: %w", err))
 	}
 
 	blockPbTimestamp := valueToTimestamp(response.KeyValues[0].Value)
@@ -174,25 +187,24 @@ func (s *GrpcServer) NumToID(ctx context.Context, in *connect.Request[pbbmsrv.Nu
 }
 
 func (s *GrpcServer) IDToNum(ctx context.Context, in *connect.Request[pbbmsrv.IDToNumReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
+	s.logger.Info("handling IDToNum request", zap.String("block_id", in.Msg.BlockID))
+	prefix := Keyer.PackBlockTimeByBlockIDKeyPrefix(in.Msg.BlockID)
 
-	slog.Info("handling IDToNum request", "block_id", in.Msg.BlockID)
-	prefix := Keyer.PackIDPrefixKey(in.Msg.BlockID)
-
-	if prefix == "1:" {
-		return nil, status.Errorf(3, "block id is empty")
+	if prefix == "1::" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid block id"))
 	}
 	response, err := s.sinkClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix})
 	if err != nil {
-		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
+		return nil, s.toConnectError(err)
 	}
 
 	if len(response.KeyValues) > 1 {
-		return nil, status.Errorf(13, "more than one block found for block id: %v", in.Msg.BlockID)
+		return nil, s.toConnectError(fmt.Errorf("more than one block found for block ID %q: %w", in.Msg.BlockID, err))
 	}
 
 	blockNum, blockID, err := Keyer.UnpackIDNumKey(response.KeyValues[0].Key)
 	if err != nil {
-		return nil, status.Errorf(13, "error unpacking block number and block ID: %v", err)
+		return nil, s.toConnectError(fmt.Errorf("unpacking block ID and block num: %w", err))
 	}
 
 	blockPbTimestamp := valueToTimestamp(response.KeyValues[0].Value)
@@ -200,17 +212,17 @@ func (s *GrpcServer) IDToNum(ctx context.Context, in *connect.Request[pbbmsrv.ID
 }
 
 func (s *GrpcServer) Head(ctx context.Context, _ *connect.Request[pbbmsrv.Empty]) (*connect.Response[pbbmsrv.BlockResp], error) {
-	slog.Info("handling Head request")
-	prefix := TblPrefixTimelineBck + ":"
+	s.logger.Info("handling Head request")
+	prefix := KeyPrefixBlockNumberByTimeBwd + ":"
 
 	response, err := s.sinkClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix, Limit: 1})
 	if err != nil {
-		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
+		return nil, s.toConnectError(err)
 	}
 
 	blockPbTimestamp, blockID, err := Keyer.UnpackTimeIDKey(response.KeyValues[0].Key, false)
 	if err != nil {
-		return nil, status.Errorf(13, "error unpacking block number and block ID: %v", err)
+		return nil, s.toConnectError(fmt.Errorf("unpacking block timestamp and block ID: %w", err))
 	}
 
 	blockNum := valueToBlockNumber(response.KeyValues[0].Value)
@@ -219,21 +231,21 @@ func (s *GrpcServer) Head(ctx context.Context, _ *connect.Request[pbbmsrv.Empty]
 }
 
 func (s *GrpcServer) At(ctx context.Context, in connect.Request[pbbmsrv.TimeReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
-	slog.Info("handling At request", "block_time", in.Msg.Time)
+	s.logger.Info("handling At request", zap.Time("block_time", in.Msg.Time.AsTime()))
 	prefix := Keyer.PackTimePrefixKey(in.Msg.Time.AsTime(), false)
 
 	response, err := s.sinkClient.GetByPrefix(ctx, &pbkv.GetByPrefixRequest{Prefix: prefix})
 	if err != nil {
-		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
+		return nil, s.toConnectError(err)
 	}
 
 	if len(response.KeyValues) > 1 {
-		return nil, status.Errorf(500, "more than one block found for block timestamp: %v", in.Msg.Time)
+		return nil, s.toConnectError(fmt.Errorf("more than one block found for block timestamp %q: %w", in.Msg.Time, err))
 	}
 
 	blockPbTimestamp, blockID, err := Keyer.UnpackTimeIDKey(response.KeyValues[0].Key, false)
 	if err != nil {
-		return nil, status.Errorf(500, "error unpacking block number and block ID: %s", err)
+		return nil, s.toConnectError(fmt.Errorf("unpacking block number and block ID: %w", err))
 	}
 
 	blockNum := valueToBlockNumber(response.KeyValues[0].Value)
@@ -241,12 +253,12 @@ func (s *GrpcServer) At(ctx context.Context, in connect.Request[pbbmsrv.TimeReq]
 }
 
 func (s *GrpcServer) Before(ctx context.Context, in *connect.Request[pbbmsrv.RelativeTimeReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
-	slog.Info("handling Before request", "block_time", in.Msg.Time)
+	s.logger.Info("handling Before request", zap.Time("block_time", in.Msg.Time.AsTime()))
 	prefix := Keyer.PackTimePrefixKey(in.Msg.Time.AsTime(), false)
 
 	response, err := s.sinkClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})
 	if err != nil {
-		return nil, fmt.Errorf("error getting block data from sink server: %w", err)
+		return nil, s.toConnectError(err)
 	}
 
 	var blockID string
@@ -256,7 +268,7 @@ func (s *GrpcServer) Before(ctx context.Context, in *connect.Request[pbbmsrv.Rel
 	for i := 0; i < len(response.KeyValues); i++ {
 		blockPbTimestamp, blockID, err = Keyer.UnpackTimeIDKey(response.KeyValues[i].Key, false)
 		if err != nil {
-			return nil, status.Errorf(13, "error unpacking block number and block ID: %s", err)
+			return nil, s.toConnectError(fmt.Errorf("unpacking block number and block ID: %w", err))
 		}
 
 		if !in.Msg.Inclusive && (blockPbTimestamp.AsTime() == in.Msg.Time.AsTime()) {
@@ -270,12 +282,12 @@ func (s *GrpcServer) Before(ctx context.Context, in *connect.Request[pbbmsrv.Rel
 }
 
 func (s *GrpcServer) After(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*pbbmsrv.BlockResp, error) {
-	slog.Info("handling After request", "block_time", in.Time)
+	s.logger.Info("handling After request", zap.Time("block_time", in.Time.AsTime()))
 	prefix := Keyer.PackTimePrefixKey(in.Time.AsTime(), true)
 
 	response, err := s.sinkClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})
 	if err != nil {
-		return nil, status.Errorf(13, "error getting block data from sink server: %s", err)
+		return nil, s.toConnectError(err)
 	}
 
 	var blockID string
@@ -286,7 +298,7 @@ func (s *GrpcServer) After(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*p
 
 		blockPbTimestamp, blockID, err = Keyer.UnpackTimeIDKey(response.KeyValues[i].Key, true)
 		if err != nil {
-			return nil, status.Errorf(13, "error unpacking block number and block ID: %s", err)
+			return nil, s.toConnectError(fmt.Errorf("unpacking block number and block ID: %w", err))
 		}
 
 		if !in.Inclusive && (blockPbTimestamp.AsTime() == in.Time.AsTime()) {

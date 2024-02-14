@@ -10,7 +10,7 @@ require (
 	github.com/streamingfast/dgrpc v0.0.0-20240214134727-3290b8959f76
 	github.com/streamingfast/logging v0.0.0-20221209193439-bff11742bf4c
 	github.com/streamingfast/shutter v1.5.0
-	github.com/streamingfast/substreams-sink-kv v0.1.3-0.20240213164553-1d839b800880
+	github.com/streamingfast/substreams-sink-kv v0.1.3-0.20240214210842-435682b6b7f2
 	go.uber.org/zap v1.24.0
 	google.golang.org/grpc v1.61.0
 	google.golang.org/protobuf v1.32.0

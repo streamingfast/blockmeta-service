@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	TblPrefixBlockIDs    = "1"
-	TblPrefixBlockNums   = "2"
-	TblPrefixTimelineFwd = "3"
-	TblPrefixTimelineBck = "4"
+	KeyPrefixBlockTimeByBlockID     = "1"
+	KeyPrefixBlockTimeByBlockNumber = "2"
+	KeyPrefixBlockNumberByTimeFwd   = "3"
+	KeyPrefixBlockNumberByTimeBwd   = "4"
 )
 
 var Keyer keyer
@@ -23,21 +23,21 @@ var Keyer keyer
 type keyer struct{}
 
 func (keyer) PackNumPrefixKey(blockNum uint64) string {
-	keyPrefix := TblPrefixBlockNums + ":" + packU64Reverse(blockNum)
+	keyPrefix := KeyPrefixBlockTimeByBlockNumber + ":" + packU64Reverse(blockNum)
 	return keyPrefix
 }
 
-func (keyer) PackIDPrefixKey(id string) string {
-	keyPrefix := TblPrefixBlockIDs + ":" + id
+func (keyer) PackBlockTimeByBlockIDKeyPrefix(id string) string {
+	keyPrefix := KeyPrefixBlockTimeByBlockID + ":" + id + ":"
 	return keyPrefix
 }
 
 func (keyer) PackTimePrefixKey(time time.Time, fwd bool) string {
 	timeAsUnixMillis := uint64(time.UnixMilli())
 	if fwd {
-		return TblPrefixTimelineFwd + ":" + packU64(timeAsUnixMillis)
+		return KeyPrefixBlockNumberByTimeFwd + ":" + packU64(timeAsUnixMillis)
 	}
-	return TblPrefixTimelineBck + ":" + packU64Reverse(timeAsUnixMillis)
+	return KeyPrefixBlockNumberByTimeBwd + ":" + packU64Reverse(timeAsUnixMillis)
 }
 
 func (keyer) UnpackNumIDKey(key string) (blockNum uint64, blockID string, err error) {
