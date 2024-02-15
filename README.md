@@ -3,10 +3,6 @@
 Welcome to the main repository of our project. This repository is organized into two main sub-repositories, each dedicated to a specific component of the project. 
 For detailed information on each component, please refer to the respective `README.md` files within the sub-repositories.
 
-## Overview
-
-Provide a brief overview of the project here, including its purpose, scope, and what users can expect to find in each sub-repository.
-
 ## Sub-Repositories
 
 ### Server
