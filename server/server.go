@@ -19,7 +19,7 @@ import (
 	dauthconnect "github.com/streamingfast/dauth/middleware/connect"
 	"github.com/streamingfast/derr"
 	dgrpcserver "github.com/streamingfast/dgrpc/server"
-	connectweb "github.com/streamingfast/dgrpc/server/connect-web"
+	"github.com/streamingfast/dgrpc/server/connectrpc"
 	"github.com/streamingfast/shutter"
 	pbkv "github.com/streamingfast/substreams-sink-kv/pb/substreams/sink/kv/v1"
 	"go.uber.org/zap"
@@ -74,7 +74,7 @@ func (s *GrpcServer) Run(ctx context.Context) {
 		return pbbmsrvconnect.NewBlockHandler(s, opts...)
 	}
 
-	srv := connectweb.New([]connectweb.HandlerGetter{streamHandlerGetter}, options...)
+	srv := connectrpc.New([]connectrpc.HandlerGetter{streamHandlerGetter}, options...)
 	addr := strings.ReplaceAll(s.httpListenAddr, "*", "")
 
 	s.OnTerminating(func(err error) {
