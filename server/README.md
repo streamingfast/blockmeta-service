@@ -1,6 +1,5 @@
 # Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)
 - [Running](#running)
 - [Examples Queries and Responses](#examples-queries-and-responses)
     - [Block Service](#block-service)
@@ -15,8 +14,6 @@
 ## Overview
 The Block Meta Service API provides a set of gRPC services for querying blockchain block metadata. It enables users to retrieve block IDs using block numbers,
 convert block IDs to block numbers, fetch the latest block information, and query blocks by specific timestamps.
-
-## Installation
 
 ## Running 
 
