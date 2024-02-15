@@ -5,7 +5,7 @@ To make such a service, you will have to extract block meta data first, store th
 
 ## Extracting and Storing data 
 
-To extract block meta data, you will need `substreams_spkg_path`. In order to get this package path, please visit the [substreams](./substreams/README.md). 
+To extract block meta data, you will need a `substreams_spkg_path`. In order to get this package path, please visit the [substreams README.md](./substreams/README.md). 
 Then you will need to run a substreams-sink-kv server, please refer to the [substreams-sink-kv](https://github.com/streamingfast/substreams-sink-kv) 
 repository that explains how to do so. 
 
