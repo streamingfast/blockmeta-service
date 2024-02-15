@@ -5,7 +5,7 @@ To make such a service, extract block meta data first, store them in a kv store 
 
 ### Extracting and Storing data 
 
-- Run a [substreams-sink-kv](https://github.com/streamingfast/substreams-sink-kv) server, providing a [substreams_spkg_path](./substreams/README.md).
+- Run a [substreams-sink-kv](https://github.com/streamingfast/substreams-sink-kv) server, providing the [substreams_spkg_path](./substreams/README.md).
 
 ### Serving data
 
