@@ -17,9 +17,10 @@ convert block IDs to block numbers, fetch the latest block information, and quer
 
 ## Running 
 
-To run a block-meta server, you can use the `blockmeta` binary. 
-The following command will start a block-meta server which will listen a specified address and will be connected to a specified sink-server
-from which it will extract the block metadata.
+Running a block-meta server, uses the `blockmeta` binary. 
+In order to run properly, the server has to be connected to a [substreams-sink-kv](https://github.com/streamingfast/substreams-sink-kv) server.
+To connect to the sink server, you can provide the substreams-sink-kv server address within the `--sink-addr` flag. 
+The server will then connect to the sink server and start listening for gRPC requests on the address provided in the `--grpc-listen-addr` flag.
 
 ```bash 
 blockmeta --sink-addr  localhost:9000 --grpc-listen-addr localhost:50051 
