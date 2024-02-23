@@ -70,11 +70,14 @@ func (s *GrpcServer) Run(ctx context.Context) {
 		options = append(options, dgrpcserver.WithPlainTextServer())
 	}
 
-	streamHandlerGetter := func(opts ...connect.HandlerOption) (string, http.Handler) {
+	blockHandlerGetter := func(opts ...connect.HandlerOption) (string, http.Handler) {
 		return pbbmsrvconnect.NewBlockHandler(s, opts...)
 	}
+	blockByTimeHandlerGetter := func(opts ...connect.HandlerOption) (string, http.Handler) {
+		return pbbmsrvconnect.NewBlockByTimeHandler(s, opts...)
+	}
 
-	srv := connectrpc.New([]connectrpc.HandlerGetter{streamHandlerGetter}, options...)
+	srv := connectrpc.New([]connectrpc.HandlerGetter{blockHandlerGetter, blockByTimeHandlerGetter}, options...)
 	addr := strings.ReplaceAll(s.httpListenAddr, "*", "")
 
 	s.OnTerminating(func(err error) {
@@ -230,7 +233,7 @@ func (s *GrpcServer) Head(ctx context.Context, _ *connect.Request[pbbmsrv.Empty]
 	return &connect.Response[pbbmsrv.BlockResp]{Msg: &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}}, nil
 }
 
-func (s *GrpcServer) At(ctx context.Context, in connect.Request[pbbmsrv.TimeReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
+func (s *GrpcServer) At(ctx context.Context, in *connect.Request[pbbmsrv.TimeReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
 	s.logger.Info("handling At request", zap.Time("block_time", in.Msg.Time.AsTime()))
 	prefix := Keyer.PackTimePrefixKey(in.Msg.Time.AsTime(), false)
 
@@ -249,7 +252,7 @@ func (s *GrpcServer) At(ctx context.Context, in connect.Request[pbbmsrv.TimeReq]
 	}
 
 	blockNum := valueToBlockNumber(response.KeyValues[0].Value)
-	return &connect.Response[pbbmsrv.BlockResp]{Msg: &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}}, nil
+	return connect.NewResponse(&pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}), nil
 }
 
 func (s *GrpcServer) Before(ctx context.Context, in *connect.Request[pbbmsrv.RelativeTimeReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
@@ -278,12 +281,12 @@ func (s *GrpcServer) Before(ctx context.Context, in *connect.Request[pbbmsrv.Rel
 		blockNum = valueToBlockNumber(response.KeyValues[i].Value)
 		break
 	}
-	return &connect.Response[pbbmsrv.BlockResp]{Msg: &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}}, nil
+	return connect.NewResponse(&pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}), nil
 }
 
-func (s *GrpcServer) After(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*pbbmsrv.BlockResp, error) {
-	s.logger.Info("handling After request", zap.Time("block_time", in.Time.AsTime()))
-	prefix := Keyer.PackTimePrefixKey(in.Time.AsTime(), true)
+func (s *GrpcServer) After(ctx context.Context, in *connect.Request[pbbmsrv.RelativeTimeReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
+	s.logger.Info("handling After request", zap.Time("block_time", in.Msg.Time.AsTime()))
+	prefix := Keyer.PackTimePrefixKey(in.Msg.Time.AsTime(), true)
 
 	response, err := s.sinkClient.Scan(ctx, &pbkv.ScanRequest{Begin: prefix, Limit: 4})
 	if err != nil {
@@ -301,7 +304,7 @@ func (s *GrpcServer) After(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*p
 			return nil, s.toConnectError(fmt.Errorf("unpacking block number and block ID: %w", err))
 		}
 
-		if !in.Inclusive && (blockPbTimestamp.AsTime() == in.Time.AsTime()) {
+		if !in.Msg.Inclusive && (blockPbTimestamp.AsTime() == in.Msg.Time.AsTime()) {
 			continue
 		}
 
@@ -309,5 +312,6 @@ func (s *GrpcServer) After(ctx context.Context, in *pbbmsrv.RelativeTimeReq) (*p
 
 		break
 	}
-	return &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}, nil
+
+	return connect.NewResponse(&pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}), nil
 }
