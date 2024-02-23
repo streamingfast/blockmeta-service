@@ -33,42 +33,41 @@ blockmeta --sink-addr  localhost:9000 --grpc-listen-addr localhost:50051
 #### Querying block information using a block number
 
 ```bash
-grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"blockNum": "501"}' holesky.eth.streamingfast.io:443 sf.blockmeta.v2.Block/NumToID
+curl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -H "Content-Type: application/json" --data '{"blockNum": "2"}' https://mainnet.eth.streamingfast.io:443/sf.blockmeta.v2.Block/NumToID
 ```
 
 ```json
 {
-"id": "00cd01a162b0bc1e9a88eb8718891dd31984f3fb64c2392570d310d8a5f05bf6",
-"num": "501",
-"time": "2023-09-28T14:16:24Z"
+"id":"b495a1d7e6663152ae92708da4843337b958146015a2802f4193a410044698c9",
+"num":"2",
+"time":"2015-07-30T15:26:57Z"
 }
 ```
 
 #### Querying block information using a block ID
 
 ```bash
-grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"blockID": "0000000046887292a76cd113a5fd6af38b17c9fb77e5936cd9856694030598f9"}' mainnet.btc.streamingfast.io:443 sf.blockmeta.v2.Block/IDToNum
+curl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -H "Content-Type: application/json" --data '{"blockID": "1cddf333f43b88edb8dcf30861542f13297e3e5a90fd03ec044926c3440ea748"}' https://mainnet.eth.streamingfast.io:443/sf.blockmeta.v2.Block/IDToNum 
 ```
 
 ```json
 {
-"id": "0000000046887292a76cd113a5fd6af38b17c9fb77e5936cd9856694030598f9",
-"num": "501",
-"time": "2009-01-14T21:38:31Z"
-}
+"id":"1cddf333f43b88edb8dcf30861542f13297e3e5a90fd03ec044926c3440ea748",
+"num":"19213975",
+"time":"2024-02-12T19:17:23Z"}
 ```
 
 #### Querying head block information
 
 ```bash
-grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" .eth.streamingfast.io:443 sf.blockmeta.v2.Block/Head
+curl -H "Authorization: Bearer $SUBSTREAMS_API_TOKEN" -H "Content-Type: application/json" --data '{}' https://mainnet.eth.streamingfast.io:443/sf.blockmeta.v2.Block/Head
 ```
 
 ```json
 {
-"id": "50446fbfca349144a5346106038c1865e753cf138db9d3f6ef25224f75c198e9",
-"num": "931897",
-"time": "2024-02-12T22:12:24Z"
+"id":"23b018bf48ee007187d776e4b1095d5a8c07e7db7bda60d5c9751fa666b8de84",
+"num":"19293009",
+"time":"2024-02-23T21:35:47Z"
 }
 ```
 
@@ -77,7 +76,7 @@ grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" .eth.streamingfast.io:443 sf
 #### Querying block information at a specific timestamp
 
 ```bash
-grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"time": "2024-02-12T19:17:23Z"}' mainnet.eth.streamingfast.io:443 sf.blockmeta.v2.BlockByTime/At
+curl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -H "Content-Type: application/json" --data '{"time": "2024-02-12T19:17:23Z"}' https://mainnet.eth.streamingfast.io:443/sf.blockmeta.v2.BlockByTime/At
 ```
 
 ```json
@@ -91,26 +90,26 @@ grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"time": "2024-02-12T19:
 #### Querying block information after a specific timestamp by setting inclusive to true
 
 ```bash
-grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"time": "2024-02-12T19:17:23Z", "inclusive": "true"}' mainnet.eth.streamingfast.io:443 sf.blockmeta.v2.BlockByTime/After
+curl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -H "Content-Type: application/json" --data '{"time": "2024-02-12T19:17:23Z", "inclusive": true}' https://mainnet.eth.streamingfast.io:443/sf.blockmeta.v2.BlockByTime/After
 ```
 
 ```json
 {
-"id": "1cddf333f43b88edb8dcf30861542f13297e3e5a90fd03ec044926c3440ea748",
-"num": "19213975",
-"time": "2024-02-12T19:17:23Z"
+"id":"1cddf333f43b88edb8dcf30861542f13297e3e5a90fd03ec044926c3440ea748",
+"num":"19213975",
+"time":"2024-02-12T19:17:23Z"
 }
 ```
+
 #### Querying block information before a specific timestamp by setting inclusive to false
 
 ```bash
-grpcurl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -d '{"time": "2024-02-12T19:17:23Z", "inclusive": "false"}' mainnet.eth.streamingfast.io:443 sf.blockmeta.v2.BlockByTime/Before```
+curl -H "Authorization: Bearer $YOUR_TOKEN_HERE" -H "Content-Type: application/json" --data '{"time": "2024-02-12T19:17:23Z", "inclusive": false}' https://mainnet.eth.streamingfast.io:443/sf.blockmeta.v2.BlockByTime/Before
 ```
 
 ```json
 {
-"id": "4132f03a2c4bf07be79b0d99e7d21aa2cdf71486b415e6031c0b3a28fd33fe2a",
-"num": "19213974",
-"time": "2024-02-12T19:17:11Z"
-}
+"id":"4132f03a2c4bf07be79b0d99e7d21aa2cdf71486b415e6031c0b3a28fd33fe2a",
+"num":"19213974",
+"time":"2024-02-12T19:17:11Z"}
 ```
