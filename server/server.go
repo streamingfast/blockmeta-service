@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/streamingfast/dmetering"
+	"google.golang.org/protobuf/proto"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -186,7 +188,10 @@ func (s *GrpcServer) NumToID(ctx context.Context, in *connect.Request[pbbmsrv.Nu
 	}
 
 	blockPbTimestamp := valueToTimestamp(response.KeyValues[0].Value)
-	return &connect.Response[pbbmsrv.BlockResp]{Msg: &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}}, nil
+	msg := &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}
+	sendMeteringEvent(ctx, proto.Size(msg), "sf.blockmeta.v2.Block/NumToID")
+
+	return &connect.Response[pbbmsrv.BlockResp]{Msg: msg}, nil
 }
 
 func (s *GrpcServer) IDToNum(ctx context.Context, in *connect.Request[pbbmsrv.IDToNumReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
@@ -211,7 +216,10 @@ func (s *GrpcServer) IDToNum(ctx context.Context, in *connect.Request[pbbmsrv.ID
 	}
 
 	blockPbTimestamp := valueToTimestamp(response.KeyValues[0].Value)
-	return &connect.Response[pbbmsrv.BlockResp]{Msg: &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}}, nil
+	msg := &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}
+	sendMeteringEvent(ctx, proto.Size(msg), "sf.blockmeta.v2.Block/IDToNum")
+
+	return &connect.Response[pbbmsrv.BlockResp]{Msg: msg}, nil
 }
 
 func (s *GrpcServer) Head(ctx context.Context, _ *connect.Request[pbbmsrv.Empty]) (*connect.Response[pbbmsrv.BlockResp], error) {
@@ -229,8 +237,10 @@ func (s *GrpcServer) Head(ctx context.Context, _ *connect.Request[pbbmsrv.Empty]
 	}
 
 	blockNum := valueToBlockNumber(response.KeyValues[0].Value)
+	msg := &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}
+	sendMeteringEvent(ctx, proto.Size(msg), "sf.blockmeta.v2.Block/Head")
 
-	return &connect.Response[pbbmsrv.BlockResp]{Msg: &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}}, nil
+	return &connect.Response[pbbmsrv.BlockResp]{Msg: msg}, nil
 }
 
 func (s *GrpcServer) At(ctx context.Context, in *connect.Request[pbbmsrv.TimeReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
@@ -252,7 +262,10 @@ func (s *GrpcServer) At(ctx context.Context, in *connect.Request[pbbmsrv.TimeReq
 	}
 
 	blockNum := valueToBlockNumber(response.KeyValues[0].Value)
-	return connect.NewResponse(&pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}), nil
+	msg := &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}
+	sendMeteringEvent(ctx, proto.Size(msg), "sf.blockmeta.v2.BlockByTime/At")
+
+	return connect.NewResponse(msg), nil
 }
 
 func (s *GrpcServer) Before(ctx context.Context, in *connect.Request[pbbmsrv.RelativeTimeReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
@@ -281,7 +294,10 @@ func (s *GrpcServer) Before(ctx context.Context, in *connect.Request[pbbmsrv.Rel
 		blockNum = valueToBlockNumber(response.KeyValues[i].Value)
 		break
 	}
-	return connect.NewResponse(&pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}), nil
+	msg := &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}
+	sendMeteringEvent(ctx, proto.Size(msg), "sf.blockmeta.v2.BlockByTime/Before")
+
+	return connect.NewResponse(msg), nil
 }
 
 func (s *GrpcServer) After(ctx context.Context, in *connect.Request[pbbmsrv.RelativeTimeReq]) (*connect.Response[pbbmsrv.BlockResp], error) {
@@ -312,6 +328,26 @@ func (s *GrpcServer) After(ctx context.Context, in *connect.Request[pbbmsrv.Rela
 
 		break
 	}
+	msg := &pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}
+	sendMeteringEvent(ctx, proto.Size(msg), "sf.blockmeta.v2.BlockByTime/After")
 
-	return connect.NewResponse(&pbbmsrv.BlockResp{Id: blockID, Num: blockNum, Time: blockPbTimestamp}), nil
+	return connect.NewResponse(msg), nil
+}
+
+func sendMeteringEvent(ctx context.Context, size int, endpoint string) {
+
+	auth := dauth.FromContext(ctx)
+	event := dmetering.Event{
+		UserID:    auth.UserID(),
+		ApiKeyID:  auth.APIKeyID(),
+		IpAddress: auth.RealIP(),
+		Meta:      auth.Meta(),
+		Endpoint:  endpoint,
+		Metrics: map[string]float64{
+			"egress_bytes": float64(size),
+			"requests":     1,
+		},
+		Timestamp: time.Now(),
+	}
+	dmetering.Emit(ctx, event)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/streamingfast/dmetering"
 	"os"
 	"regexp"
 
@@ -11,6 +12,8 @@ import (
 	authGRPC "github.com/streamingfast/dauth/grpc"
 	authNull "github.com/streamingfast/dauth/null"
 	"github.com/streamingfast/derr"
+	meteringGRPC "github.com/streamingfast/dmetering/grpc"
+	meteringLogger "github.com/streamingfast/dmetering/logger"
 	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
@@ -19,6 +22,7 @@ var (
 	listenAddress          = flag.String("grpc-listen-addr", ":9000", "The gRPC server listen address")
 	sinkServerAddress      = flag.String("sink-addr", ":9001", "The sink server address")
 	authUrl                = flag.String("auth-url", "null://", "The URL of the auth server")
+	meteringUrl            = flag.String("metering-url", "null://", "The URL of the dmetering sink")
 	corsHostRegexAllowFlag = flag.String("cors-host-regex-allow", "^localhost", "Regex to allow CORS origin requests from, defaults to localhost only")
 )
 
@@ -30,6 +34,10 @@ func main() {
 
 	authNull.Register()
 	authGRPC.Register()
+
+	meteringGRPC.Register()
+	meteringLogger.Register()
+	dmetering.RegisterNull()
 
 	if *sinkServerAddress == "" {
 		zlog.Error("sink server address is required")
@@ -48,6 +56,14 @@ func main() {
 		zlog.Error("unable to create authenticator", zap.Error(err))
 		os.Exit(1)
 	}
+
+	eventEmitter, err := dmetering.New(*meteringUrl, zlog)
+	if err != nil {
+		zlog.Error("unable to create event emitter", zap.Error(err))
+		os.Exit(1)
+	}
+	defer eventEmitter.Shutdown(nil)
+	dmetering.SetDefaultEmitter(eventEmitter)
 
 	var corsHostRegexAllow *regexp.Regexp
 	if *corsHostRegexAllowFlag != "" {
