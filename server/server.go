@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/streamingfast/dmetering"
-	"google.golang.org/protobuf/proto"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -22,11 +20,13 @@ import (
 	"github.com/streamingfast/derr"
 	dgrpcserver "github.com/streamingfast/dgrpc/server"
 	"github.com/streamingfast/dgrpc/server/connectrpc"
+	"github.com/streamingfast/dmetering"
 	"github.com/streamingfast/shutter"
 	pbkv "github.com/streamingfast/substreams-sink-kv/pb/substreams/sink/kv/v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

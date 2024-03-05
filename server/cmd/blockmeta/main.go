@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/streamingfast/dmetering"
 	"os"
 	"regexp"
 
@@ -12,6 +11,7 @@ import (
 	authGRPC "github.com/streamingfast/dauth/grpc"
 	authNull "github.com/streamingfast/dauth/null"
 	"github.com/streamingfast/derr"
+	"github.com/streamingfast/dmetering"
 	meteringGRPC "github.com/streamingfast/dmetering/grpc"
 	meteringLogger "github.com/streamingfast/dmetering/logger"
 	"github.com/streamingfast/logging"
